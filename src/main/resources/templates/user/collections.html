@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Editorial Collection | H-Menswear</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --primary: #111; --bg: #FAFAFA; --gold: #C5A059; 
+            --text-muted: #888; --transition: 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--primary); font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
+        
+        /* Font chữ Nghệ thuật */
+        .serif-text { font-family: 'Playfair Display', serif; }
+
+        /* ================= NAVBAR TỐI GIẢN ================= */
+        header { background: transparent; padding: 30px 5%; display: flex; justify-content: space-between; align-items: center; position: absolute; top: 0; width: 100%; z-index: 100;}
+        .logo { font-size: 20px; font-weight: 700; color: var(--primary); text-decoration: none; letter-spacing: 4px; text-transform: uppercase;}
+        .nav-links { list-style: none; display: flex; gap: 40px; }
+        .nav-links a { text-decoration: none; color: var(--primary); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+        .cart-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--primary); transition: 0.3s;}
+        .cart-btn:hover { color: var(--gold); }
+
+        /* ================= HERO EDITORIAL ================= */
+        .hero-section { height: 65vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 50px; text-align: center; }
+        .hero-title { font-size: 6vw; font-weight: 400; text-transform: uppercase; letter-spacing: 8px; margin-bottom: 10px; line-height: 1; }
+        .hero-subtitle { font-size: 14px; font-weight: 300; letter-spacing: 4px; color: var(--text-muted); text-transform: uppercase; }
+
+        /* ================= BỘ LỌC TEXT NẰM NGANG ================= */
+        .elegant-filter { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 40px; border-top: 1px solid #EAEAEA; border-bottom: 1px solid #EAEAEA; padding: 25px 5%; margin-bottom: 80px; }
+        .filter-link { text-decoration: none; color: var(--text-muted); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 2px; transition: 0.4s; position: relative;}
+        .filter-link:hover, .filter-link.active { color: var(--primary); }
+        .filter-link.active::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 1px; background: var(--primary); }
+        
+        .sort-dropdown { border: none; background: transparent; font-family: 'Montserrat'; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); outline: none; cursor: pointer; font-weight: 600;}
+
+        /* ================= LƯỚI SẢN PHẨM BẤT ĐỐI XỨNG (MASONRY/MAGAZINE) ================= */
+        .editorial-grid { max-width: 1400px; margin: 0 auto; padding: 0 5%; display: grid; grid-template-columns: repeat(12, 1fr); gap: 40px 60px; padding-bottom: 100px;}
+        
+        .art-card { text-decoration: none; color: inherit; display: block; position: relative; margin-bottom: 40px; }
+        
+        /* CÔNG THỨC SẮP XẾP SO LE NGHỆ THUẬT:
+           Item 1: Nhỏ (5 cột)
+           Item 2: To (7 cột) + Đẩy thụt xuống
+           Item 3: To (7 cột)
+           Item 4: Nhỏ (5 cột) + Đẩy thụt xuống 
+        */
+        .art-card:nth-child(4n + 1) { grid-column: span 5; }
+        .art-card:nth-child(4n + 2) { grid-column: span 7; margin-top: 150px; }
+        .art-card:nth-child(4n + 3) { grid-column: span 7; }
+        .art-card:nth-child(4n + 4) { grid-column: span 5; margin-top: 150px; }
+
+        .img-wrapper { position: relative; overflow: hidden; background: #e9e9e9; }
+        .img-wrapper img { width: 100%; height: auto; display: block; filter: grayscale(100%) contrast(1.1); transition: var(--transition); }
+        
+        /* Hiệu ứng khi Hover */
+        .art-card:hover .img-wrapper img { filter: grayscale(0%); transform: scale(1.04); }
+
+        .btn-quick-add { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.95); color: var(--primary); border: none; padding: 15px 30px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; opacity: 0; transition: 0.4s ease; backdrop-filter: blur(5px);}
+        .art-card:hover .btn-quick-add { opacity: 1; }
+        .btn-quick-add:hover { background: var(--primary); color: white; }
+
+        /* Thông tin sản phẩm */
+        .art-info { margin-top: 25px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .art-title-box { max-width: 70%; }
+        .art-brand { font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: var(--text-muted); margin-bottom: 8px; display: block;}
+        .art-name { font-size: 20px; font-weight: 400; line-height: 1.3; }
+        .art-price { font-size: 16px; font-weight: 500; font-family: 'Montserrat'; }
+
+        /* ================= PHÂN TRANG ================= */
+        .pagination { display: flex; justify-content: center; gap: 15px; margin-bottom: 80px; }
+        .btn-page { display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; border: 1px solid #ddd; border-radius: 50%; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.3s; }
+        .btn-page:hover, .btn-page.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* ================= RESPONSIVE ================= */
+        @media (max-width: 1024px) {
+            .hero-title { font-size: 8vw; }
+            .art-card:nth-child(4n+1), .art-card:nth-child(4n+4) { grid-column: span 6; }
+            .art-card:nth-child(4n+2), .art-card:nth-child(4n+3) { grid-column: span 6; margin-top: 80px; }
+        }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .elegant-filter { gap: 20px; padding: 20px 5%; }
+            .art-card:nth-child(n) { grid-column: span 12; margin-top: 0; margin-bottom: 60px; }
+        }
+    
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text">
+
+    <header>
+        <a href="/" class="logo">H-MENSWEAR</a>
+        <ul class="nav-links">
+            <li><a href="/collections" class="active">Bộ Sưu Tập</a></li>
+            <li><a href="/vouchers">Ưu đãi</a></li>
+            <li><a href="/products">Sản Phẩm</a></li>
+        </ul>
+        <a href="/cart" title="Giỏ hàng",  class="cart-btn"><i class="fa-solid fa-bag-shopping"></i></a>
+    </header>
+
+    <div class="hero-section">
+        <h1 class="hero-title serif-text">The Collection</h1>
+        <p class="hero-subtitle">Định Hình Phong Cách. Nâng Tầm Đẳng Cấp.</p>
+    </div>
+
+    <div class="elegant-filter">
+        <a  th:href="|?brand=${(curr_brand != null ? curr_brand : '')}&sort=${curr_sort}|" class="filter-link" th:classappend="${not (curr_cat != null) ? ' active' : ''}">Toàn bộ</a>
+        
+        <th:block th:each="c : ${categories}">
+        <a  th:href="|?category=${c.id}&brand=${(curr_brand != null ? curr_brand : '')}&sort=${curr_sort}|" class="filter-link" th:classappend="${curr_cat == c.id ? ' active' : ''}">[[${c.ten_loai}]]</a>
+        </th:block>
+
+        <span style="color: #ccc;">|</span>
+
+        <select class="sort-dropdown" onchange="window.location.href=this.value">
+            <option  th:value="|?category=${(curr_cat != null ? curr_cat : '')}&brand=${(curr_brand != null ? curr_brand : '')}&sort=newest|" th:selected="${curr_sort == 'newest'}">SẮP XẾP: MỚI NHẤT</option>
+            <option  th:value="|?category=${(curr_cat != null ? curr_cat : '')}&brand=${(curr_brand != null ? curr_brand : '')}&sort=price_asc|" th:selected="${curr_sort == 'price_asc'}">SẮP XẾP: GIÁ TĂNG DẦN</option>
+            <option  th:value="|?category=${(curr_cat != null ? curr_cat : '')}&brand=${(curr_brand != null ? curr_brand : '')}&sort=price_desc|" th:selected="${curr_sort == 'price_desc'}">SẮP XẾP: GIÁ GIẢM DẦN</option>
+        </select>
+    </div>
+
+    <div class="editorial-grid">
+        <th:block th:each="p : ${products}">
+        <a  th:href="|/product/${p.id}|" class="art-card">
+            <div class="img-wrapper">
+                <img  th:src="|${p.hinh_anh}|"  th:alt="|${p.ten_sp}|">
+                <button class="btn-quick-add"  th:onclick="|event.preventDefault(); addToCart(${p.id})|">Thêm vào giỏ</button>
+            </div>
+            <div class="art-info">
+                <div class="art-title-box">
+                    <span class="art-brand">[[${p.ten_nsx}]]</span>
+                    <h2 class="art-name serif-text">[[${p.ten_sp}]]</h2>
+                </div>
+                <div class="art-price">[[${#numbers.formatDecimal((p.gia_ban), 0, 'COMMA', 0, 'POINT')}]]đ</div>
+            </div>
+        </a>
+        </th:block><th:block th:if="${#lists.isEmpty(products)}">
+        <div style="grid-column: 1 / -1; text-align: center; padding: 100px 0;">
+            <p class="serif-text" style="font-size: 24px; color: var(--text-muted);">Khung hình đang trống.</p>
+            <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #aaa; margin-top: 10px;">Không tìm thấy tác phẩm nào phù hợp với tùy chọn của bạn.</p>
+        </div>
+        </th:block>
+    </div>
+
+    <th:block th:if="${total_pages > 1}">
+    <div class="pagination">
+        <th:block th:if="${current_page > 1}">
+            <a  th:href="|?category=${(curr_cat != null ? curr_cat : '')}&brand=${(curr_brand != null ? curr_brand : '')}&sort=${curr_sort}&page=${current_page - 1}|" class="btn-page"><i class="fa-solid fa-angle-left"></i></a>
+        </th:block>
+
+        <th:block th:each="p : ${#numbers.sequence(1, total_pages)}">
+            <a  th:href="|?category=${(curr_cat != null ? curr_cat : '')}&brand=${(curr_brand != null ? curr_brand : '')}&sort=${curr_sort}&page=${p}|" class="btn-page" th:classappend="${p == current_page ? ' active' : ''}">[[${p}]]</a>
+        </th:block>
+
+        <th:block th:if="${current_page < total_pages}">
+            <a  th:href="|?category=${(curr_cat != null ? curr_cat : '')}&brand=${(curr_brand != null ? curr_brand : '')}&sort=${curr_sort}&page=${current_page + 1}|" class="btn-page"><i class="fa-solid fa-angle-right"></i></a>
+        </th:block>
+    </div>
+    </th:block>
+
+    <script>
+        function addToCart(productId) {
+            // Hiệu ứng nhẹ khi bấm thêm vào giỏ
+            alert("Đã thêm tác phẩm #" + productId + " vào tủ đồ của bạn.");
+            // Code fetch API giỏ hàng thực tế của bạn sẽ nằm ở đây
+        }
+    </script>
+</body>
+</html>

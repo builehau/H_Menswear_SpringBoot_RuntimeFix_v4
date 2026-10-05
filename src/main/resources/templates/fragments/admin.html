@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title th:text="${title}">H-Menswear Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<aside class="sidebar" th:fragment="sidebar(active)">
+    <div class="brand" style="padding:24px 25px">H-MENSWEAR</div>
+    <div class="user-box" onclick="document.body.classList.toggle('menu-collapsed')">
+        <div class="avatar"><i class="fa-solid fa-user-tie"></i></div><div class="u-info"><p th:text="${currentUserName ?: 'Nhân viên'}">Nhân viên</p><p th:text="${currentUserRole ?: 'Admin'}">Admin</p></div>
+    </div>
+    <nav class="nav-list">
+        <a th:href="@{/admin/dashboard}" class="nav-item" th:classappend="${active=='dashboard' ? ' active':''}"><i class="fa-solid fa-house"></i><span>Tổng Quan</span></a>
+        <th:block sec:authorize="hasRole('MANAGER')">
+            <a th:href="@{/admin/reports}" class="nav-item" th:classappend="${active=='reports' ? ' active':''}"><i class="fa-solid fa-chart-pie"></i><span>Vận Hành</span></a>
+            <a th:href="@{/admin/revenue}" class="nav-item" th:classappend="${active=='revenue' ? ' active':''}"><i class="fa-solid fa-hand-holding-dollar"></i><span>Doanh Thu</span></a>
+            <a th:href="@{/admin/audit-logs}" class="nav-item" th:classappend="${active=='audit' ? ' active':''}"><i class="fa-solid fa-file-lines"></i><span>Nhật Ký</span></a>
+            <a th:href="@{/admin/vouchers}" class="nav-item" th:classappend="${active=='vouchers' ? ' active':''}"><i class="fa-solid fa-ticket"></i><span>Khuyến Mãi</span></a>
+            <a th:href="@{/admin/employees}" class="nav-item" th:classappend="${active=='employees' ? ' active':''}"><i class="fa-solid fa-user-shield"></i><span>Nhân Viên</span></a>
+        </th:block>
+        <th:block sec:authorize="hasAnyRole('MANAGER','ORDER_STAFF')">
+            <a th:href="@{/admin/customers}" class="nav-item" th:classappend="${active=='customers' ? ' active':''}"><i class="fa-solid fa-users"></i><span>Khách Hàng</span></a>
+            <a th:href="@{/admin/orders}" class="nav-item" th:classappend="${active=='orders' ? ' active':''}"><i class="fa-solid fa-cart-flatbed"></i><span>Đơn Hàng</span></a>
+        </th:block>
+        <th:block sec:authorize="hasAnyRole('MANAGER','WAREHOUSE_STAFF')">
+            <a th:href="@{/admin/products}" class="nav-item" th:classappend="${active=='products' ? ' active':''}"><i class="fa-solid fa-box"></i><span>Sản Phẩm</span></a>
+            <a th:href="@{/admin/manufacturers}" class="nav-item" th:classappend="${active=='manufacturers' ? ' active':''}"><i class="fa-solid fa-industry"></i><span>Nhà Sản Xuất</span></a>
+        </th:block>
+    </nav>
+    <div style="padding:20px;margin-top:auto"><a th:href="@{/logout}" class="nav-item" style="padding:0;color:var(--danger)"><i class="fa-solid fa-power-off"></i><span>Đăng Xuất</span></a></div>
+</aside>
+<div class="top-navbar" th:fragment="topbar(title)"><h2 class="admin-title" th:text="${title}">Quản trị</h2><div class="realtime-clock"><i class="fa-regular fa-clock" style="color:var(--gold)"></i><span id="clock-display"></span></div></div>
+<script th:fragment="scripts">
+function updateClock(){const e=document.getElementById('clock-display');if(e)e.textContent=new Date().toLocaleString('vi-VN');}updateClock();setInterval(updateClock,1000);
+async function api(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j.message||'Có lỗi xảy ra');return j;}
+</script>
+</body></html>

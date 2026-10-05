@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Nhân sự | H-Menswear Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #111; --gold: #C5A059; --bg: #f4f7f6; --white: #fff;
+            --sidebar-w: 260px; --sidebar-c: 80px; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --success: #27ae60; --danger: #e74c3c; --border: #eee;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg); display: flex; min-height: 100vh; overflow-x: hidden; }
+
+        /* ================= SIDEBAR THU PHÓNG BẰNG USER BOX ================= */
+        .sidebar { width: var(--sidebar-w); background: var(--primary); color: white; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; transition: var(--transition); z-index: 1000; overflow-y: auto;}
+        .sidebar::-webkit-scrollbar { display: none; }
+        .sidebar { -ms-overflow-style: none; scrollbar-width: none; }
+        body.menu-collapsed .sidebar { width: var(--sidebar-c); }
+        
+        .sidebar-header { min-height: 75px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .brand { font-weight: 700; color: var(--gold); white-space: nowrap; transition: 0.2s; font-size: 18px; letter-spacing: 1px;}
+        body.menu-collapsed .brand { display: none; }
+
+        /* USER BOX DÙNG LÀM NÚT TOGGLE MENU */
+        .user-box { padding: 15px; margin: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px; overflow: hidden; transition: var(--transition); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .user-box:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
+        body.menu-collapsed .user-box { margin: 15px 10px; padding: 10px; justify-content: center; }
+        .avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--gold), #e6c17a); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 18px; }
+        .u-info { white-space: nowrap; transition: 0.2s; }
+        .u-info p:first-child { font-weight: 700; font-size: 14px; color: #fff; margin-bottom: 4px;}
+        .u-info p:last-child { font-size: 10px; color: var(--gold); text-transform: uppercase; font-weight: 600;}
+        body.menu-collapsed .u-info { display: none; }
+
+        /* MENU LIST & PHÂN QUYỀN */
+        .nav-list { list-style: none; flex: 1; padding: 10px 0; }
+        .nav-item { display: flex; align-items: center; padding: 15px 28px; color: #a0a0a0; text-decoration: none; transition: var(--transition); border-left: 4px solid transparent; font-weight: 500;}
+        body.menu-collapsed .nav-item { justify-content: center; padding: 15px 0; border-left: none; }
+        .nav-item i { font-size: 18px; width: 25px; text-align: center; flex-shrink: 0; }
+        .nav-item span { margin-left: 15px; white-space: nowrap; transition: 0.2s;}
+        body.menu-collapsed .nav-item span { display: none; }
+        .nav-item:hover, .nav-item.active { color: white; background: rgba(255,255,255,0.05); border-left-color: var(--gold); }
+        .nav-item:hover i, .nav-item.active i { color: var(--gold); }
+
+        /* ================= MAIN CONTENT ================= */
+        .main-content { margin-left: var(--sidebar-w); width: calc(100% - var(--sidebar-w)); transition: var(--transition); padding: 30px; }
+        body.menu-collapsed .main-content { margin-left: var(--sidebar-c); width: calc(100% - var(--sidebar-c)); }
+
+        .top-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+
+        .card { background: var(--white); border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); padding: 30px; border: 1px solid rgba(0,0,0,0.02);}
+        
+        .filter-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 20px; flex-wrap: wrap; gap: 15px;}
+        .search-form { display: flex; gap: 10px; flex: 1; min-width: 300px; }
+        .search-form input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; outline: none; width: 100%; max-width: 350px; font-family: 'Montserrat'; }
+        
+        .btn-add { background: var(--primary); color: white; padding: 12px 25px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;}
+        .btn-add:hover { background: var(--gold); }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 16px; border-bottom: 2px solid var(--border); color: #888; font-size: 11px; text-transform: uppercase; }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle;}
+
+        .role-badge { padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; background: #fdfaf0; color: var(--gold); border: 1px solid rgba(197, 160, 89, 0.2); }
+        .acc-active { color: var(--success); font-weight: 700; font-size: 12px;}
+        .acc-none { color: #ccc; font-style: italic; font-size: 12px;}
+        
+        .copy-btn { border: none; background: #f0f0f0; color: #555; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 10px; margin-left: 5px; }
+        .copy-btn:hover { background: var(--gold); color: white; }
+
+        /* ================= MODAL ================= */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px);}
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 35px; border-radius: 12px; width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);}
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-top: 5px; outline: none; font-family: 'Montserrat'; font-size: 13px;}
+        input:focus, select:focus { border-color: var(--gold); }
+        label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #666; }
+    
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text">
+
+    <aside class="sidebar" id="sidebar">
+
+        
+        <div class="user-box" onclick="toggleSidebar()" title="Thu/Phóng Menu (Click)">
+            <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="u-info">
+                <p>[[${currentUserName}]]</p>
+                <p>[[${currentUserRole}]]</p>
+            </div>
+        </div>
+
+          <nav class="nav-list">
+            <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house"></i> <span>Tổng Quan</span></a>
+            
+            <th:block th:if="${currentUserRole == 'Quản lý'}">
+            <a href="/admin/reports" class="nav-item"><i class="fa-solid fa-chart-pie"></i> <span>Vận Hành</span></a>
+            <a href="/admin/revenue" class="nav-item"><i class="fa-solid fa-hand-holding-dollar"></i> <span>Doanh Thu</span></a>
+
+        <a href="/admin/audit-logs" class="nav-item"><i class="fa-solid fa-file-lines"></i> <span>Nhật Ký</span></a>
+
+         <a href="/admin/vouchers" class="nav-item"><i class="fa-solid fa-ticket"></i> <span>Khuyến Mãi</span></a>
+                             <a href="/admin/employees" class="nav-item active"><i class="fa-solid fa-user-shield"></i> <span>Nhân Viên</span></a>
+         
+         
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV xác nhận đơn')}">
+                 <a href="/admin/customers" class="nav-item "><i class="fa-solid fa-users"></i> <span>Khách Hàng</span></a>
+            <a href="/admin/orders" class="nav-item"><i class="fa-solid fa-cart-flatbed"></i> <span>Đơn Hàng</span></a>
+       
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV Kho')}">
+            <a href="/admin/products" class="nav-item"><i class="fa-solid fa-box"></i> <span>Sản Phẩm</span></a>
+            <a href="/admin/manufacturers" class="nav-item"><i class="fa-solid fa-industry"></i> <span>Nhà Sản Xuất</span></a>
+            </th:block>
+ 
+    </nav>
+        
+        <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;">
+            <a href="/logout" class="nav-item" style="padding:0; color:var(--danger);"><i class="fa-solid fa-power-off"></i> <span>Đăng Xuất</span></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-navbar">
+            <h2 style="font-weight: 700; color: var(--primary); font-size: 20px;">Quản lý Nhân sự</h2>
+            <div style="font-size: 13px; color: #888;">Quản trị tài khoản và phân quyền hệ thống</div>
+        </div>
+
+        <div class="card">
+            <div class="filter-bar">
+                <form class="search-form" method="GET">
+                    <input type="text" name="search" placeholder="Tìm kiếm mã NV, tên..."  th:value="|${search}|">
+                    <button type="submit" class="btn-add" style="background: var(--primary);"><i class="fa-solid fa-search"></i> TÌM KIẾM</button>
+                </form>
+                <button class="btn-add" onclick="openModal()"><i class="fa-solid fa-plus"></i> THÊM NHÂN VIÊN</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã NV</th>
+                        <th>Họ và Tên</th>
+                        <th>Chức vụ (Phân quyền)</th>
+                        <th>Thông tin liên hệ</th>
+                        <th>Tài khoản Đăng nhập</th>
+                        <th style="text-align: right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <th:block th:each="e : ${employees}">
+                    <tr>
+                        <td style="color: var(--primary);"><b>[[${e.ma_nv}]]</b></td>
+                        <td style="font-weight: 600;">[[${e.ten_nv}]]</td>
+                        <td><span class="role-badge">[[${e.chuc_vu}]]</span></td>
+                        <td>
+                            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                                <i class="fa-solid fa-phone" style="color:#aaa; font-size:10px; width:15px;"></i> [[${e.sdt}]] 
+                                <button class="copy-btn"  th:attr="data-copy=${e.sdt}" onclick="copyToClipboard(this.dataset.copy)" title="Copy SĐT"><i class="fa-solid fa-copy"></i></button>
+                            </div>
+                            <div style="display: flex; align-items: center; color:#777;">
+                                <i class="fa-solid fa-envelope" style="color:#aaa; font-size:10px; width:15px;"></i> [[${e.email}]]
+                                <button class="copy-btn"  th:attr="data-copy=${e.email}" onclick="copyToClipboard(this.dataset.copy)" title="Copy Email"><i class="fa-solid fa-copy"></i></button>
+                            </div>
+                        </td>
+                        <td>
+                            <th:block th:if="${e.login_status == 'Đã cấp'}">
+                                <span class="acc-active"><i class="fa-solid fa-circle-check"></i> Đã cấp</span>
+                            </th:block><th:block th:if="${e.login_status != 'Đã cấp'}">
+                                <span class="acc-none"><i class="fa-solid fa-circle-xmark"></i> Chưa có</span>
+                            </th:block>
+                        </td>
+                        <td style="text-align: right;">
+                            <button th:attr="data-id=${e.id}" onclick="openEditModalById(this.dataset.id)" style="border:none; background:none; color:var(--info); cursor:pointer; margin-right:15px; font-size: 16px;" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button  th:attr="data-id=${e.id}" onclick="deleteEmp(this.dataset.id)" style="border:none; background:none; color:var(--danger); cursor:pointer; font-size: 16px;" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                    </th:block>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div class="modal" id="empModal">
+        <div class="modal-content">
+            <h3 id="modalTitle" style="margin-bottom:20px; color: var(--primary);">Hồ sơ Nhân viên</h3>
+            <form id="empForm" onsubmit="saveEmp(event)">
+                <input type="hidden" id="e_id">
+                
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label>Mã nhân viên</label>
+                        <input type="text" id="e_ma" required placeholder="VD: NV001">
+                    </div>
+                    <div>
+                        <label>Họ và Tên</label>
+                        <input type="text" id="e_ten" required placeholder="Nhập họ và tên đầy đủ">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label>Chức vụ (Hệ thống sẽ cấp quyền dựa trên mục này)</label>
+                    <select id="e_role">
+                        <th:block th:each="r : ${roles}"><option  th:value="|${r.id}|">[[${r.chuc_vu}]]</option></th:block>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label>Số điện thoại</label>
+                        <input type="text" id="e_sdt" required placeholder="Bắt buộc nhập">
+                    </div>
+                    <div>
+                        <label>Email liên hệ</label>
+                        <input type="email" id="e_email" required placeholder="Bắt buộc nhập">
+                    </div>
+                </div>
+
+                <div style="background: #fdfaf0; padding: 15px; border-radius: 8px; border: 1px dashed var(--gold);">
+                    <label style="color:var(--gold)"><i class="fa-solid fa-key"></i> Mật khẩu Đăng nhập hệ thống Admin</label>
+                    <input type="password" id="e_pass" placeholder="Nhập để cấp mới/Đổi mật khẩu (Để trống nếu không đổi)">
+                </div>
+
+                <div style="margin-top:25px; display:flex; gap:10px;">
+                    <button type="submit" class="btn-add" style="flex:1; justify-content: center;">LƯU HỒ SƠ</button>
+                    <button type="button" onclick="closeModal()" style="flex:1; border:none; border-radius:6px; cursor:pointer; font-weight: 600; background: #eee; color: #333;">HỦY BỎ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 1. CHỨC NĂNG THU PHÓNG BẰNG USER-BOX
+        function toggleSidebar() {
+            document.body.classList.toggle('menu-collapsed');
+            localStorage.setItem('admin_sidebar_collapsed', document.body.classList.contains('menu-collapsed'));
+        }
+        if (localStorage.getItem('admin_sidebar_collapsed') === 'true') {
+            document.body.classList.add('menu-collapsed');
+        }
+
+        // 2. CHỨC NĂNG COPY NHANH TEXT (SĐT/Email)
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Đã copy: " + text);
+            });
+        }
+
+        // 3. LOGIC MODAL & LƯU/SỬA
+        function openModal() { 
+            document.getElementById('empForm').reset(); 
+            document.getElementById('e_id').value=''; 
+            document.getElementById('empModal').classList.add('active'); 
+        }
+        
+        function closeModal() { 
+            document.getElementById('empModal').classList.remove('active'); 
+        }
+        
+        function openEditModalById(id) {
+            fetch('/admin/api/employee/' + id)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') openEditModal(data.data);
+                    else alert(data.message || 'Không tải được hồ sơ nhân viên.');
+                })
+                .catch(() => alert('Không tải được hồ sơ nhân viên.'));
+        }
+
+        function openEditModal(e) {
+            document.getElementById('e_id').value = e.id;
+            document.getElementById('e_ma').value = e.ma_nv;
+            document.getElementById('e_ten').value = e.ten_nv;
+            document.getElementById('e_role').value = e.ma_chuc_vu;
+            document.getElementById('e_sdt').value = e.sdt;
+            document.getElementById('e_email').value = e.email;
+            document.getElementById('empModal').classList.add('active');
+        }
+
+        function saveEmp(event) {
+            event.preventDefault();
+            const data = {
+                id: document.getElementById('e_id').value,
+                ma_nv: document.getElementById('e_ma').value,
+                ten_nv: document.getElementById('e_ten').value,
+                ma_chuc_vu: document.getElementById('e_role').value,
+                sdt: document.getElementById('e_sdt').value,
+                email: document.getElementById('e_email').value,
+                password: document.getElementById('e_pass').value
+            };
+            fetch('/admin/api/employee/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(res => res.json()).then(res => { 
+                if(res.status==='success') {
+                    location.reload(); 
+                } else {
+                    // Hiển thị thông báo nếu trùng lặp Email/SĐT
+                    alert(res.message); 
+                }
+            });
+        }
+
+        function deleteEmp(id) {
+            if(!confirm("Xác nhận cho nhân viên này nghỉ việc và xóa khỏi hệ thống? (Thao tác này không thể hoàn tác)")) return;
+            fetch('/admin/api/employee/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: id})
+            }).then(res => res.json()).then(res => { 
+                if(res.status==='success') location.reload(); 
+            });
+        }
+    </script>
+</body>
+</html>

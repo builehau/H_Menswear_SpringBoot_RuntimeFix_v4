@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kho Khuyến Mãi | H-Menswear</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #C5A059; --black: #111111; --bg: #F9F9F9; --border: #EAEAEA; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg); color: var(--black); }
+        header { background: #fff; padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;}
+        .logo { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: bold; letter-spacing: 2px; text-decoration: none; color: var(--black);}
+
+        .container { max-width: 1200px; margin: 50px auto; padding: 0 5%; }
+        .page-title { font-family: 'Playfair Display', serif; font-size: 32px; text-align: center; margin-bottom: 50px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .voucher-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
+        
+        /* THIẾT KẾ VÉ VOUCHER CỰC ĐẸP */
+        .v-card { display: flex; border: 1px solid transparent; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: 0.3s; position: relative; }
+        .v-card:hover { transform: translateY(-5px); border-color: var(--gold); box-shadow: 0 10px 30px rgba(197,160,89,0.15); }
+        .v-card::before, .v-card::after { content: ''; position: absolute; width: 20px; height: 20px; background: var(--bg); border-radius: 50%; left: 110px; z-index: 10;}
+        .v-card::before { top: -10px; }
+        .v-card::after { bottom: -10px; }
+
+        .v-left { background: var(--gold); color: white; width: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px 10px; border-right: 2px dashed rgba(255,255,255,0.6); position: relative;}
+        .v-left i { font-size: 28px; margin-bottom: 10px; }
+        .v-left .amount { font-size: 20px; font-weight: 700; text-align: center;}
+        
+        .v-right { padding: 25px 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .v-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+        .v-desc { font-size: 12px; color: #666; margin-bottom: 15px; }
+        .v-expiry { font-size: 11px; color: #e74c3c; font-weight: 600; margin-bottom: 15px;}
+        
+        .v-btn { padding: 10px 20px; border: none; background: var(--black); color: white; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; width: max-content; }
+        .v-btn:hover { background: var(--gold); }
+        
+        /* Mã đã lưu */
+        .v-card.saved .v-left { background: #bbb; border-color: rgba(255,255,255,0.3); }
+        .v-card.saved:hover { border-color: transparent; transform: none; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+        .v-btn.saved { background: #eee; color: #888; pointer-events: none; }
+    
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text">
+
+    <header>
+        <a href="/home" class="logo">H-MENSWEAR</a>
+        <a href="/products" style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--black); text-decoration:none;">Đến Cửa Hàng <i class="fa-solid fa-arrow-right"></i></a>
+    </header>
+
+    <main class="container">
+        <h1 class="page-title">Săn Khuyến Mãi Hấp Dẫn</h1>
+        
+        <div class="voucher-grid">
+            <th:block th:each="v : ${vouchers}">
+            <div class="v-card" th:classappend="${v.is_saved ? ' saved' : ''}">
+                <div class="v-left">
+                    <i class="fa-solid fa-ticket"></i>
+                    <div class="amount">
+                        <th:block th:if="${v.loai_giam == 'Phần trăm'}">[[${v.gia_tri}]]%
+                        </th:block><th:block th:if="${not (v.loai_giam == 'Phần trăm')}">[[${#numbers.formatDecimal((v.gia_tri/1000), 0, 'COMMA', 0, 'POINT')}]]K</th:block>
+                    </div>
+                </div>
+                <div class="v-right">
+                    <div>
+                        <div class="v-title">MÃ: [[${v.ma_voucher}]]</div>
+                        <div class="v-desc">Giảm tối đa cho đơn hàng từ [[${#numbers.formatDecimal((v.don_toi_thieu), 0, 'COMMA', 0, 'POINT')}]]đ</div>
+                        <div class="v-expiry"><i class="fa-regular fa-clock"></i> HSD: [[${(v.ngay_het_han != null) ? (v.ngay_het_han) : ('Không giới hạn')}]]</div>
+                    </div>
+                    <th:block th:if="${v.is_saved}">
+                        <button class="v-btn saved"><i class="fa-solid fa-check"></i> Đã Lưu</button>
+                    </th:block><th:block th:if="${not (v.is_saved)}">
+                        <button class="v-btn"  th:onclick="|saveVoucher(${v.id}, this)|">Lưu Ngay</button>
+                    </th:block>
+                </div>
+            </div>
+            </th:block><th:block th:if="${#lists.isEmpty(vouchers)}">
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px 0; color: #888;">
+                <i class="fa-solid fa-ticket-simple" style="font-size: 50px; margin-bottom: 20px; opacity: 0.2;"></i>
+                <p>Hiện chưa có chương trình khuyến mãi nào. Vui lòng quay lại sau!</p>
+            </div>
+            </th:block>
+        </div>
+    </main>
+
+    <script>
+        const isLoggedIn = [[${(logged_in) ? ('true') : ('false')}]];
+
+        function saveVoucher(voucherId, btnElement) {
+            if (!isLoggedIn) {
+                alert("Bạn cần đăng nhập để lưu mã giảm giá!");
+                window.location.href = '/login';
+                return;
+            }
+
+            fetch('/api/voucher/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ voucher_id: voucherId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    // Hiệu ứng chuyển sang trạng thái đã lưu
+                    btnElement.innerHTML = '<i class="fa-solid fa-check"></i> Đã Lưu';
+                    btnElement.classList.add('saved');
+                    btnElement.closest('.v-card').classList.add('saved');
+                    alert("Lưu mã thành công! Bạn có thể dùng mã này khi thanh toán.");
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

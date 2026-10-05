@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập | H-Menswear</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gold: #C5A059;
+            --black: #222222;
+            --white: #FFFFFF;
+            --smoke: #F5F7F8;
+            --gray: #777777;
+            --border: #E5E5E5;
+            --danger: #dc3545;
+            --success: #28a745;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background-color: var(--smoke);
+            color: var(--black);
+        }
+        
+        .login-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .login-container {
+            background: var(--white);
+            width: 100%;
+            max-width: 400px;
+            padding: 50px 40px;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+        }
+
+        .logo-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logo-header a {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--black);
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header p {
+            font-size: 14px;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .flash-error { color: var(--danger); }
+        .flash-success { color: var(--success); }
+
+        .form-group { margin-bottom: 25px; }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            color: var(--black);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 0;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            outline: none;
+            transition: 0.3s;
+            background: transparent;
+            font-size: 14px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .form-group input::placeholder {
+            color: #bbb;
+            font-weight: 400;
+        }
+
+        .form-group input:focus {
+            border-bottom-color: var(--gold);
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 25px;
+        }
+
+        .forgot-password a {
+            font-size: 12px;
+            color: var(--gray);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .forgot-password a:hover {
+            color: var(--gold);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: var(--black);
+            color: var(--white);
+            border: none;
+            font-weight: 600;
+            letter-spacing: 2px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.4s;
+            border-radius: 4px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .btn-login:hover {
+            background: var(--gold);
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .login-footer a {
+            color: var(--black);
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+            border-bottom: 1px solid transparent;
+            padding-bottom: 2px;
+        }
+
+        .login-footer a:hover {
+            color: var(--gold);
+            border-bottom-color: var(--gold);
+        }
+    
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text">
+
+    <main class="login-page">
+        <div class="login-container">
+            <div class="logo-header">
+                <a href="/home">H-MENSWEAR</a>
+            </div>
+            
+            <div class="login-header">
+                <p>Đăng nhập vào tài khoản của bạn</p>
+            </div>
+
+            <!-- Khối hiển thị thông báo (Lỗi / Thành công) -->
+            <div class="flash-messages">
+                <p th:if="${loginError}" class="flash-error">Email hoặc mật khẩu không chính xác.</p>
+                <p th:if="${logoutSuccess}" class="flash-success">Bạn đã đăng xuất thành công.</p>
+                <p th:if="${successMessage != null}" class="flash-success">[[${successMessage}]]</p>
+                <p th:if="${errorMessage != null}" class="flash-error">[[${errorMessage}]]</p>
+            </div>
+
+            <form th:action="@{/login}" action="/login" method="POST">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="next"  th:value="${next != null ? next : ''}">
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" placeholder="email@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                </div>
+
+                <div class="forgot-password">
+                    <a href="#">Quên mật khẩu?</a>
+                </div>
+
+                <button type="submit" class="btn-login">ĐĂNG NHẬP</button>
+            </form>
+
+            <div class="login-footer">
+                <p>Chưa có tài khoản? <a href="/register">Đăng ký ngay</a></p>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

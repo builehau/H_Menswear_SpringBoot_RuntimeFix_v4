@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Nhật Ký Hệ Thống | H-Menswear Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #111; --gold: #C5A059; --bg: #f4f7f6; --white: #fff; --border: #eee;
+            --sidebar-w: 260px; --sidebar-c: 80px; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --danger: #e74c3c; --success: #27ae60; --info: #3498db; --warning: #f39c12;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg); display: flex; min-height: 100vh; overflow-x: hidden; color: var(--primary); }
+
+        /* ================= SIDEBAR ĐỒNG BỘ ================= */
+        .sidebar { width: var(--sidebar-w); background: var(--primary); color: white; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; transition: var(--transition); z-index: 1000; overflow-y: auto;}
+        .sidebar::-webkit-scrollbar { display: none; }
+        .sidebar { -ms-overflow-style: none; scrollbar-width: none; }
+        body.menu-collapsed .sidebar { width: var(--sidebar-c); }
+        
+        .sidebar-header { min-height: 75px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .brand { font-weight: 700; color: var(--gold); white-space: nowrap; transition: 0.2s; font-size: 18px; letter-spacing: 1px;}
+        body.menu-collapsed .brand { display: none; }
+
+        .user-box { padding: 15px; margin: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px; overflow: hidden; transition: var(--transition); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .user-box:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
+        body.menu-collapsed .user-box { margin: 15px 10px; padding: 10px; justify-content: center; }
+        .avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--gold), #e6c17a); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 18px; }
+        .u-info { white-space: nowrap; transition: 0.2s; }
+        .u-info p:first-child { font-weight: 700; font-size: 14px; color: #fff; margin-bottom: 4px;}
+        .u-info p:last-child { font-size: 10px; color: var(--gold); text-transform: uppercase; font-weight: 600;}
+        body.menu-collapsed .u-info { display: none; }
+
+        .nav-list { list-style: none; flex: 1; padding: 10px 0; }
+        .nav-item { display: flex; align-items: center; padding: 15px 28px; color: #a0a0a0; text-decoration: none; transition: var(--transition); border-left: 4px solid transparent; font-weight: 500;}
+        body.menu-collapsed .nav-item { justify-content: center; padding: 15px 0; border-left: none; }
+        .nav-item i { font-size: 18px; width: 25px; text-align: center; flex-shrink: 0; }
+        .nav-item span { margin-left: 15px; white-space: nowrap; transition: 0.2s;}
+        body.menu-collapsed .nav-item span { display: none; }
+        .nav-item:hover, .nav-item.active { color: white; background: rgba(255,255,255,0.05); border-left-color: var(--gold); }
+        .nav-item:hover i, .nav-item.active i { color: var(--gold); }
+
+        /* ================= MAIN CONTENT ================= */
+        .main-content { margin-left: var(--sidebar-w); width: calc(100% - var(--sidebar-w)); transition: var(--transition); padding: 30px; }
+        body.menu-collapsed .main-content { margin-left: var(--sidebar-c); width: calc(100% - var(--sidebar-c)); }
+
+        .top-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+
+        /* Bảng Table */
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); padding: 25px;}
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 15px; text-align: left; font-size: 11px; text-transform: uppercase; color: #888; border-bottom: 2px solid var(--border); }
+        td { padding: 18px 15px; font-size: 13px; border-bottom: 1px solid #f9f9f9; vertical-align: middle; }
+        tr:hover { background: #fcfcfc; }
+        
+        .log-time { color: #888; font-size: 12px; }
+        .log-emp { color: var(--gold); font-weight: 700; }
+        .log-action { font-weight: 700; display: inline-block; padding: 4px 10px; background: #f4f4f4; border-radius: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;}
+    
+        .actor-badge { display:inline-block; margin-left:7px; padding:2px 6px; border-radius:8px; background:#f3efe5; color:#8d6e2d; font-size:8px; font-weight:700; letter-spacing:.4px; }
+
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text">
+
+    <aside class="sidebar" id="sidebar">
+        
+        <div class="user-box" onclick="toggleSidebar()" title="Thu/Phóng Menu (Click)">
+            <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="u-info">
+                <p>[[${currentUserName}]]</p>
+                <p>[[${currentUserRole}]]</p>
+            </div>
+        </div>
+
+        <nav class="nav-list">
+            <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house"></i> <span>Tổng Quan</span></a>
+            
+            <th:block th:if="${currentUserRole == 'Quản lý'}">
+            <a href="/admin/reports" class="nav-item"><i class="fa-solid fa-chart-pie"></i> <span>Vận Hành</span></a>
+            <a href="/admin/revenue" class="nav-item"><i class="fa-solid fa-hand-holding-dollar"></i> <span>Doanh Thu</span></a>
+
+        <a href="/admin/audit-logs" class="nav-item active"><i class="fa-solid fa-file-lines"></i> <span>Nhật Ký</span></a>
+
+         <a href="/admin/vouchers" class="nav-item"><i class="fa-solid fa-ticket"></i> <span>Khuyến Mãi</span></a>
+                             <a href="/admin/employees" class="nav-item"><i class="fa-solid fa-user-shield"></i> <span>Nhân Viên</span></a>
+         
+         
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV xác nhận đơn')}">
+                 <a href="/admin/customers" class="nav-item"><i class="fa-solid fa-users"></i> <span>Khách Hàng</span></a>
+            <a href="/admin/orders" class="nav-item"><i class="fa-solid fa-cart-flatbed"></i> <span>Đơn Hàng</span></a>
+       
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV Kho')}">
+            <a href="/admin/products" class="nav-item"><i class="fa-solid fa-box"></i> <span>Sản Phẩm</span></a>
+            <a href="/admin/manufacturers" class="nav-item"><i class="fa-solid fa-industry"></i> <span>Nhà Sản Xuất</span></a>
+            </th:block>
+ 
+    </nav>
+
+        <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;">
+            <a href="/logout" class="nav-item" style="padding:0; color:var(--danger);"><i class="fa-solid fa-power-off"></i> <span>Đăng Xuất</span></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-navbar">
+            <h2 style="font-weight: 700; color: var(--primary); font-size: 20px;">Nhật Ký Giám Sát (Audit Logs)</h2>
+        </div>
+
+        <div class="card">
+            <p style="color: #666; margin-bottom: 25px; font-size: 13px;">Ghi lại 50 thao tác gần nhất, bao gồm đăng nhập/đăng xuất và các thao tác quản trị, để đảm bảo tính minh bạch.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 150px;">Thời gian</th>
+                        <th style="width: 220px;">Tài khoản thực hiện</th>
+                        <th style="width: 200px;">Hành động</th>
+                        <th>Chi tiết thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <th:block th:each="log : ${logs}">
+                    <tr>
+                        <td class="log-time"><i class="fa-regular fa-clock" style="margin-right: 5px;"></i> [[${log.thoi_gian}]]</td>
+                        <td>
+                            <div class="log-emp">[[${log.ten_nv}]]</div>
+                            <small style="color:#888;">[[${log.ma_nhan_vien}]]</small>
+                            <span class="actor-badge" th:text="${log.actor_type == 'EMPLOYEE' ? 'NHÂN VIÊN' : (log.actor_type == 'CUSTOMER' ? 'KHÁCH HÀNG' : 'HỆ THỐNG')}">HỆ THỐNG</span>
+                        </td>
+                        <td><span class="log-action">[[${log.hanh_dong}]]</span></td>
+                        <td style="color: #555; line-height: 1.5;">[[${log.chi_tiet}]]</td>
+                    </tr>
+                    </th:block><th:block th:if="${#lists.isEmpty(logs)}">
+                    <tr><td colspan="4" style="text-align: center; padding: 40px; color: #888;">Hệ thống chưa ghi nhận thao tác nào.</td></tr>
+                    </th:block>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // TOGGLE MENU MƯỢT MÀ BẰNG USER-BOX
+        function toggleSidebar() {
+            document.body.classList.toggle('menu-collapsed');
+            localStorage.setItem('admin_sidebar_collapsed', document.body.classList.contains('menu-collapsed'));
+        }
+        // Giữ trạng thái đóng mở khi load lại trang
+        if (localStorage.getItem('admin_sidebar_collapsed') === 'true') {
+            document.body.classList.add('menu-collapsed');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Sản phẩm | H-Menswear Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #111; --gold: #C5A059; --bg: #f4f7f6; --white: #fff; --border: #eee;
+            --sidebar-w: 260px; --sidebar-c: 80px; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --danger: #e74c3c; --success: #27ae60; --info: #3498db;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg); display: flex; min-height: 100vh; overflow-x: hidden; color: var(--primary); }
+
+        /* ================= SIDEBAR THU PHÓNG BẰNG USER BOX ================= */
+        .sidebar { width: var(--sidebar-w); background: var(--primary); color: white; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; transition: var(--transition); z-index: 1000; overflow-y: auto;}
+        .sidebar::-webkit-scrollbar { display: none; }
+        .sidebar { -ms-overflow-style: none; scrollbar-width: none; }
+        body.menu-collapsed .sidebar { width: var(--sidebar-c); }
+        
+        .sidebar-header { min-height: 75px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .brand { font-weight: 700; color: var(--gold); white-space: nowrap; transition: 0.2s; font-size: 18px; letter-spacing: 1px;}
+        body.menu-collapsed .brand { display: none; }
+
+        .user-box { padding: 15px; margin: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px; overflow: hidden; transition: var(--transition); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .user-box:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
+        body.menu-collapsed .user-box { margin: 15px 10px; padding: 10px; justify-content: center; }
+        .avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--gold), #e6c17a); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 18px; }
+        .u-info { white-space: nowrap; transition: 0.2s; }
+        .u-info p:first-child { font-weight: 700; font-size: 14px; color: #fff; margin-bottom: 4px;}
+        .u-info p:last-child { font-size: 10px; color: var(--gold); text-transform: uppercase; font-weight: 600;}
+        body.menu-collapsed .u-info { display: none; }
+
+        .nav-list { list-style: none; flex: 1; padding: 10px 0; }
+        .nav-item { display: flex; align-items: center; padding: 15px 28px; color: #a0a0a0; text-decoration: none; transition: var(--transition); border-left: 4px solid transparent; font-weight: 500;}
+        body.menu-collapsed .nav-item { justify-content: center; padding: 15px 0; border-left: none; }
+        .nav-item i { font-size: 18px; width: 25px; text-align: center; flex-shrink: 0; }
+        .nav-item span { margin-left: 15px; white-space: nowrap; transition: 0.2s;}
+        body.menu-collapsed .nav-item span { display: none; }
+        .nav-item:hover, .nav-item.active { color: white; background: rgba(255,255,255,0.05); border-left-color: var(--gold); }
+        .nav-item:hover i, .nav-item.active i { color: var(--gold); }
+
+        /* ================= MAIN CONTENT ================= */
+        .content { margin-left: var(--sidebar-w); width: calc(100% - var(--sidebar-w)); padding: 40px; transition: var(--transition); }
+        body.menu-collapsed .content { margin-left: var(--sidebar-c); width: calc(100% - var(--sidebar-c)); }
+
+        .top-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+        .export-btn { background: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 13px;}
+        .export-btn:hover { background: #219653; }
+
+        .card { background: var(--white); border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); padding: 30px; margin-bottom: 25px; border: 1px solid rgba(0,0,0,0.02);}
+        
+        .alert-box { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
+        .alert-high { background: #ebf5fb; border-left: 4px solid var(--info); }
+        .alert-low { background: #fffcf5; border-left: 4px solid var(--gold); }
+        .btn-alert { padding: 8px 15px; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 12px; }
+
+        .filter-bar { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .filter-group { display: flex; flex-direction: column; gap: 8px; }
+        .filter-group label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px;}
+        .filter-group select, .filter-group input { padding: 12px; border: 1px solid #e1e1e1; border-radius: 6px; font-size: 13px; outline: none; transition: 0.3s;}
+        .filter-group select:focus, .filter-group input:focus { border-color: var(--gold); }
+        .btn-add { background: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.3s; letter-spacing: 0.5px;}
+        .btn-add:hover { background: var(--gold); box-shadow: 0 4px 10px rgba(197, 160, 89, 0.3);}
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 16px; border-bottom: 2px solid var(--border); color: #888; font-size: 12px; text-transform: uppercase; font-weight: 700;}
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+        .prod-img { width: 50px; height: 65px; object-fit: cover; border-radius: 6px; background: #f0f0f0; border: 1px solid #eee;}
+
+        .copy-btn { border: none; background: #f0f0f0; color: #555; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 10px; margin-left: 5px; }
+        .copy-btn:hover { background: var(--gold); color: white; }
+
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border);}
+        .btn-page { display: flex; align-items: center; justify-content: center; min-width: 35px; height: 35px; border: 1px solid #ddd; color: #555; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600; transition: 0.3s; padding: 0 10px;}
+        .btn-page:hover, .btn-page.active { background: var(--gold); color: white; border-color: var(--gold); box-shadow: 0 4px 10px rgba(197,160,89,0.3);}
+
+        /* MODAL */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px);}
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 35px; border-radius: 12px; width: 850px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2);}
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px;}
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .form-group.full { grid-column: span 2; }
+        .form-group label { font-size: 12px; font-weight: 700; margin-bottom: 8px; color: #555; text-transform: uppercase; }
+        input, select, textarea { padding: 12px; border: 1px solid #e1e1e1; border-radius: 6px; font-family: 'Montserrat'; outline: none; transition: 0.3s;}
+        input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+        
+        .size-list { background: #fdfdfd; padding: 20px; border-radius: 8px; border: 1px solid #e1e1e1; }
+        .size-item { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-small { padding: 8px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; border: none; font-weight: 700; transition: 0.3s;}
+        .btn-del-item { background: #fff0f0; color: var(--danger); }
+        .btn-del-item:hover { background: var(--danger); color: white; }
+
+        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; background: #fff; padding: 15px; border-radius: 8px; border: 1px dashed #ccc; margin-top: 10px;}
+        .img-slot label { font-size: 11px; color: var(--gold); display: block; margin-bottom: 5px; font-weight: bold;}
+    
+        .stock-detail-card { margin-bottom:25px; border-top:3px solid var(--gold); animation:stockOpen .25s ease; }
+        .stock-detail-head { display:flex; align-items:center; justify-content:space-between; gap:15px; margin-bottom:15px; }
+        .stock-detail-head strong { display:block; font-size:14px; margin-bottom:5px; }
+        .stock-detail-head small { color:#777; }
+        .stock-close { width:34px;height:34px;border:1px solid #ddd;background:white;border-radius:50%;cursor:pointer; }
+        .stock-size-list { display:flex; flex-wrap:wrap; gap:5px; }
+        .stock-size-chip { padding:4px 8px; border-radius:4px; background:#eef7fd; color:#1d6fa5; border:1px solid #cde7f7; font-size:11px; }
+        .stock-size-chip.low { background:#fff4f2; color:#b54136; border-color:#f4cdc7; }
+        .stock-edit-btn { border:1px solid #b9ddf5;background:#f4fbff;color:#2479ad;border-radius:6px;padding:8px 10px;cursor:pointer;font-weight:700;font-size:11px; }
+        .stock-edit-btn.danger { border-color:#f0c4be;background:#fff7f6;color:#c74c40; }
+        .stock-edit-btn:hover { transform:translateY(-1px); box-shadow:0 5px 12px rgba(0,0,0,.08); }
+        @keyframes stockOpen { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:none} }
+
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text">
+
+    <aside class="sidebar" id="sidebar">
+     
+        
+        <div class="user-box" onclick="toggleSidebar()" title="Thu/Phóng Menu (Click)">
+            <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="u-info">
+                <p>[[${currentUserName}]]</p>
+                <p>[[${currentUserRole}]]</p>
+            </div>
+        </div>
+
+          <nav class="nav-list">
+            <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house"></i> <span>Tổng Quan</span></a>
+            
+            <th:block th:if="${currentUserRole == 'Quản lý'}">
+            <a href="/admin/reports" class="nav-item"><i class="fa-solid fa-chart-pie"></i> <span>Vận Hành</span></a>
+            <a href="/admin/revenue" class="nav-item"><i class="fa-solid fa-hand-holding-dollar"></i> <span>Doanh Thu</span></a>
+
+        <a href="/admin/audit-logs" class="nav-item"><i class="fa-solid fa-file-lines"></i> <span>Nhật Ký</span></a>
+
+         <a href="/admin/vouchers" class="nav-item"><i class="fa-solid fa-ticket"></i> <span>Khuyến Mãi</span></a>
+                             <a href="/admin/employees" class="nav-item"><i class="fa-solid fa-user-shield"></i> <span>Nhân Viên</span></a>
+         
+         
+            
+
+            </th:block>
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV xác nhận đơn')}">
+                 <a href="/admin/customers" class="nav-item"><i class="fa-solid fa-users"></i> <span>Khách Hàng</span></a>
+            <a href="/admin/orders" class="nav-item"><i class="fa-solid fa-cart-flatbed"></i> <span>Đơn Hàng</span></a>
+       
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV Kho')}">
+            <a href="/admin/products" class="nav-item active"><i class="fa-solid fa-box"></i> <span>Sản Phẩm</span></a>
+            <a href="/admin/manufacturers" class="nav-item"><i class="fa-solid fa-industry"></i> <span>Nhà Sản Xuất</span></a>
+            </th:block>
+ 
+    </nav>
+        
+        <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;">
+            <a href="/logout" class="nav-item" style="padding:0; color:var(--danger);"><i class="fa-solid fa-power-off"></i> <span>Đăng Xuất</span></a>
+        </div>
+    </aside>
+
+    <main class="content">
+        <div class="top-navbar">
+            <h2 style="margin-bottom: 0; font-weight: 700; font-size: 20px; color: var(--primary);">Quản lý Kho & Sản Phẩm</h2>
+            <button class="export-btn" onclick="exportToCSV()"><i class="fa-solid fa-file-csv"></i> Xuất File Kiểm Kho</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+            <div class="alert-box alert-high">
+                <div><strong>📦 TỒN KHO CAO</strong><br><small>Có <b>[[${#lists.size(high_stock)}]]</b> sản phẩm tồn trên 100</small></div>
+                <button class="btn-alert" style="background: var(--info);" onclick="toggleTable('highStockTable')">Xem</button>
+            </div>
+            <div class="alert-box alert-low">
+                <div><strong>⚠️ SẮP HẾT HÀNG</strong><br><small>Có <b>[[${#lists.size(low_stock)}]]</b> sản phẩm tồn dưới 10</small></div>
+                <button class="btn-alert" style="background: var(--gold);" onclick="toggleTable('lowStockTable')">Xem</button>
+            </div>
+        </div>
+
+        <div id="highStockTable" class="card stock-detail-card" style="display:none;">
+            <div class="stock-detail-head"><div><strong>📦 DANH SÁCH TỒN KHO CAO</strong><small>Sản phẩm có tổng tồn trên 100, hiển thị chi tiết theo size</small></div><button type="button" class="stock-close" onclick="toggleTable('highStockTable')"><i class="fa-solid fa-xmark"></i></button></div>
+            <table style="margin:0;">
+                <thead><tr><th>Mã SP</th><th>Tên SP</th><th>Chi tiết tồn theo Size</th><th style="text-align:center;">Tổng Tồn</th><th>Trạng thái</th><th style="text-align:right;">Thao tác</th></tr></thead>
+                <tbody>
+                    <tr th:each="p : ${high_stock}">
+                        <td><b>[[${p.ma_sp}]]</b></td><td>[[${p.ten_sp}]]</td>
+                        <td><div class="stock-size-list"><span th:each="sz : ${p.size_list}" class="stock-size-chip"><b>[[${sz.size}]]</b>: [[${sz.so_luong}]]</span><span th:if="${#lists.isEmpty(p.size_list)}" class="stock-size-chip">Chưa tách size</span></div></td>
+                        <td style="text-align:center; color:var(--info); font-weight:bold;">[[${p.so_luong}]]</td>
+                        <td><span th:if="${p.trang_thai == 'Đang bán'}" style="color:var(--success);font-weight:700;">Đang bán</span><span th:unless="${p.trang_thai == 'Đang bán'}" style="color:#999;">Đã ẩn</span></td>
+                        <td style="text-align:right;"><button class="stock-edit-btn" th:onclick="|openEditModalById(${p.id})|"><i class="fa-solid fa-pen-to-square"></i> Cập nhật</button></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(high_stock)}"><td colspan="6" style="text-align:center;color:#888;padding:25px;">Không có sản phẩm tồn kho cao.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="lowStockTable" class="card stock-detail-card" style="display:none;">
+            <div class="stock-detail-head"><div><strong>⚠️ DANH SÁCH TỒN KHO THẤP</strong><small>Sản phẩm đang bán có tổng tồn dưới 10, kiểm tra từng size trước khi nhập hàng</small></div><button type="button" class="stock-close" onclick="toggleTable('lowStockTable')"><i class="fa-solid fa-xmark"></i></button></div>
+            <table style="margin:0;">
+                <thead><tr><th>Mã SP</th><th>Tên SP</th><th>Chi tiết tồn theo Size</th><th style="text-align:center;">Tổng Tồn</th><th>Trạng thái</th><th style="text-align:right;">Thao tác</th></tr></thead>
+                <tbody>
+                    <tr th:each="p : ${low_stock}">
+                        <td><b>[[${p.ma_sp}]]</b></td><td>[[${p.ten_sp}]]</td>
+                        <td><div class="stock-size-list"><span th:each="sz : ${p.size_list}" class="stock-size-chip low"><b>[[${sz.size}]]</b>: [[${sz.so_luong}]]</span><span th:if="${#lists.isEmpty(p.size_list)}" class="stock-size-chip low">Chưa tách size</span></div></td>
+                        <td style="text-align:center; color:var(--danger); font-weight:bold;">[[${p.so_luong}]]</td>
+                        <td><span th:if="${p.trang_thai == 'Đang bán'}" style="color:var(--success);font-weight:700;">Đang bán</span><span th:unless="${p.trang_thai == 'Đang bán'}" style="color:#999;">Đã ẩn</span></td>
+                        <td style="text-align:right;"><button class="stock-edit-btn danger" th:onclick="|openEditModalById(${p.id})|"><i class="fa-solid fa-pen-to-square"></i> Cập nhật kho</button></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(low_stock)}"><td colspan="6" style="text-align:center;color:#888;padding:25px;">Không có sản phẩm sắp hết hàng.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <form class="filter-bar" method="GET" action="/admin/products">
+                <div class="filter-group">
+                    <label>Tìm kiếm</label>
+                    <input type="text" name="search" placeholder="Mã, tên..."  th:value="|${search}|" style="width: 250px;">
+                </div>
+                <div class="filter-group"><label>Danh mục</label><select name="category"><option value="">Tất cả</option><option th:each="c : ${categories}" th:value="${c.id}" th:selected="${curr_cat == c.id}" th:text="${c.ten_loai}"></option></select></div>
+                <div class="filter-group"><label>Thương hiệu</label><select name="brand"><option value="">Tất cả</option><th:block th:each="b : ${brands}"><option  th:value="|${b.id}|" th:selected="${curr_brand == b.id}">[[${b.ten_nsx}]]</option></th:block></select></div>
+                <div class="filter-group"><label>Trạng thái</label><select name="status"><option value="">Tất cả</option><option value="Đang bán" th:selected="${curr_status == 'Đang bán'}">Đang bán</option><option value="Ngừng kinh doanh" th:selected="${curr_status == 'Ngừng kinh doanh'}">Đã ẩn</option></select></div>
+                <button type="submit" class="btn-add" style="background:var(--primary)">LỌC</button>
+                <button type="button" class="btn-add" onclick="openModal()" style="margin-left:auto">+ THÊM SẢN PHẨM</button>
+            </form>
+
+            <table id="productTable">
+                <thead>
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Mã / Tên SP</th>
+                        <th style="text-align: center;">Mã Vạch</th> <th>Phân loại</th>
+                        <th>Giá bán</th>
+                        <th>Chi tiết Tồn kho (Size)</th>
+                        <th>Trạng thái</th>
+                        <th style="text-align: right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <th:block th:each="p : ${products}">
+                    <tr class="item-row">
+                        <td><img  th:src="|${p.hinh_anh}|" class="prod-img"></td>
+                        <td>
+                            <b>[[${p.ma_sp}]]</b><br>
+                            <small>[[${p.ten_sp}]]</small>
+                        </td>
+                        <td style="text-align: center;">
+                            <th:block th:if="${p.ma_vach != null}">
+                                <img  th:src="|/uploads/barcodes/${p.ma_vach}.png|" style="height:30px; display:inline-block;" onerror="this.style.display='none'">
+                                <br><small style="color:#888;">[[${p.ma_vach}]]</small>
+                            </th:block><th:block th:if="${not (p.ma_vach != null)}">
+                                <span style="color:#aaa; font-size:10px;">Chưa có</span>
+                            </th:block>
+                        </td>
+                        <td>[[${p.ten_loai}]]<br><small style="color: #888;">[[${p.ten_nsx}]]</small></td>
+                        <td style="font-weight: 700; color: var(--gold);">[[${#numbers.formatDecimal((p.gia_ban), 0, 'COMMA', 0, 'POINT')}]]đ</td>
+                        <td>
+                            <b style="font-size:14px; color:var(--danger)" th:style="${p.so_luong < 10 ? 'font-size:14px; color:var(--danger)' : 'font-size:14px; color:var(--success)'}">Tổng: [[${p.so_luong}]]</b>
+                            <div style="font-size: 11px; color: #666; margin-top: 5px; display:flex; flex-wrap:wrap; gap:5px;">
+                                <th:block th:each="s : ${p.size_list}">
+                                    <span style="background:#f4f4f4; border:1px solid #e1e1e1; padding:3px 8px; border-radius:4px;"><b>[[${s.size}]]</b>: [[${s.so_luong}]]</span>
+                                </th:block>
+                            </div>
+                        </td>
+                        <td>
+                            <th:block th:if="${p.trang_thai == 'Đang bán'}"><span style="color:var(--success); font-weight:700; font-size: 11px;"><i class="fa-solid fa-circle-check"></i> Đang bán</span></th:block><th:block th:if="${not (p.trang_thai == 'Đang bán')}"><span style="color:#aaa; text-decoration:line-through; font-size: 11px;"><i class="fa-solid fa-eye-slash"></i> Đã ẩn</span></th:block>
+                        </td>
+                        <td class="action-btns" style="text-align: right;">
+                            <button  th:onclick="|openEditModalById(${p.id})|" style="color:var(--info); border:none; background:none; cursor:pointer; font-size:18px; margin-right:12px;" title="Sửa thông tin"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button  th:onclick="|toggleStatus(${p.id})|" style="color:var(--warning); border:none; background:none; cursor:pointer; font-size:18px; margin-right:12px;" title="Ẩn/Hiện sản phẩm"><i class="fa-solid fa-power-off"></i></button>
+                            <button  th:onclick="|deleteProduct(${p.id})|" style="color:var(--danger); border:none; background:none; cursor:pointer; font-size:18px;" title="Xóa cứng sản phẩm"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                    </th:block>
+                </tbody>
+            </table>
+
+            <th:block th:if="${total_pages > 1}">
+            <div class="pagination">
+                <th:block th:if="${current_page > 1}">
+                    <a  th:href="|?search=${search}&category=${(curr_cat != null ? curr_cat : '')}&brand=${(curr_brand != null ? curr_brand : '')}&status=${(curr_status != null ? curr_status : '')}&page=${current_page - 1}|" class="btn-page"><i class="fa-solid fa-chevron-left"></i></a>
+                </th:block>
+
+                <th:block th:each="p_num : ${#numbers.sequence(1, total_pages)}">
+                    <a  th:href="|?search=${search}&category=${(curr_cat != null ? curr_cat : '')}&brand=${(curr_brand != null ? curr_brand : '')}&status=${(curr_status != null ? curr_status : '')}&page=${p_num}|" class="btn-page" th:classappend="${p_num == current_page ? ' active' : ''}">[[${p_num}]]</a>
+                </th:block>
+
+                <th:block th:if="${current_page < total_pages}">
+                    <a  th:href="|?search=${search}&category=${(curr_cat != null ? curr_cat : '')}&brand=${(curr_brand != null ? curr_brand : '')}&status=${(curr_status != null ? curr_status : '')}&page=${current_page + 1}|" class="btn-page"><i class="fa-solid fa-chevron-right"></i></a>
+                </th:block>
+            </div>
+            </th:block>
+
+        </div>
+    </main>
+
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle" style="font-weight: 700; letter-spacing: 0.5px; color: var(--primary);">THÊM SẢN PHẨM MỚI</h3>
+                <i class="fa-solid fa-xmark" style="cursor:pointer; font-size:24px; transition: 0.3s; color: #888;" onclick="closeModal()"></i>
+            </div>
+            
+            <form id="productForm" onsubmit="saveProduct(event)">
+                <input type="hidden" id="p_id">
+                <input type="hidden" id="p_hinh_anh_current">
+                
+                <div class="form-grid">
+                    <div class="form-group"><label>Mã sản phẩm</label><input type="text" id="p_ma_sp" required></div>
+                    <div class="form-group"><label>Tên sản phẩm</label><input type="text" id="p_ten_sp" required></div>
+                    <div class="form-group"><label>Mã vạch (Barcode)</label><input type="text" id="p_ma_vach"></div>
+                    <div class="form-group"><label>Giá bán (VNĐ)</label><input type="number" id="p_gia_ban" required></div>
+                    
+                    <div class="form-group">
+                        <label>Danh mục</label>
+                        <select id="p_loai_sp" required><th:block th:each="c : ${categories}"><option  th:value="|${c.id}|">[[${c.ten_loai}]]</option></th:block></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nhà sản xuất</label>
+                        <select id="p_ma_nsx" required><th:block th:each="b : ${brands}"><option  th:value="|${b.id}|">[[${b.ten_nsx}]]</option></th:block></select>
+                    </div>
+
+                    <div class="form-group full"><label>Màu sắc chủ đạo</label><input type="text" id="p_mau_sac" placeholder="Ví dụ: Đen phối Trắng"></div>
+
+                    <div class="form-group full">
+                        <label>Quản lý tồn kho theo Size <span style="color:red">*</span></label>
+                        <div class="size-list">
+                            <button type="button" class="btn-small" onclick="addSizeRow()" style="background:var(--primary); color:white; margin-bottom:15px; border-radius: 6px;"><i class="fa-solid fa-plus"></i> THÊM DÒNG SIZE</button>
+                            <div id="sizeContainer"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group full"><label>Mô tả chi tiết</label><textarea id="p_mo_ta" rows="4"></textarea></div>
+
+                    <div class="form-group full" style="background:#fafafa; padding:20px; border-radius:8px; border:1px solid #e1e1e1;">
+                        <label style="color:var(--gold); font-size:14px; margin-bottom:15px; display:block;">1. Ảnh Thumbnail Chính</label>
+                        <div style="display: flex; gap: 20px; margin-bottom: 15px; font-size: 13px; font-weight: 600;">
+                            <label><input type="radio" name="img_type" value="url" checked onchange="toggleImgInput()"> Dùng Link URL</label>
+                            <label><input type="radio" name="img_type" value="file" onchange="toggleImgInput()"> Tải File</label>
+                        </div>
+                        <input type="text" id="p_hinh_anh_url" placeholder="Nhập Link ảnh chính...">
+                        <input type="file" id="p_hinh_anh_file" accept="image/*" style="display: none; background: white;">
+                        <img id="preview_img" src="" style="width: 60px; height: 80px; object-fit: cover; border-radius: 6px; display: none; margin-top: 15px; border: 1px solid #ddd;">
+                        
+                        <label style="color:var(--gold); font-size:14px; margin-top:30px; margin-bottom:10px; display:block;">2. Bộ sưu tập 4 Ảnh phụ (Link URL)</label>
+                        <div class="gallery-grid">
+                            <div class="img-slot"><label>Ảnh phụ 1</label><input type="text" class="sub-img" placeholder="http://..."></div>
+                            <div class="img-slot"><label>Ảnh phụ 2</label><input type="text" class="sub-img" placeholder="http://..."></div>
+                            <div class="img-slot"><label>Ảnh phụ 3</label><input type="text" class="sub-img" placeholder="http://..."></div>
+                            <div class="img-slot"><label>Ảnh phụ 4</label><input type="text" class="sub-img" placeholder="http://..."></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-add" style="width:100%; padding:18px; margin-top:20px; font-size: 14px; letter-spacing: 1px;"><i class="fa-solid fa-floppy-disk"></i> LƯU SẢN PHẨM VÀO KHO</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // TOGGLE MENU MƯỢT MÀ BẰNG USER-BOX
+        function toggleSidebar() {
+            document.body.classList.toggle('menu-collapsed');
+            localStorage.setItem('admin_sidebar_collapsed', document.body.classList.contains('menu-collapsed'));
+        }
+        if (localStorage.getItem('admin_sidebar_collapsed') === 'true') {
+            document.body.classList.add('menu-collapsed');
+        }
+        
+        // COPY NHANH
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Đã copy: " + text);
+            });
+        }
+
+        // XUẤT CSV (Kiểm kho)
+        function exportToCSV() {
+            let table = document.getElementById("productTable");
+            let rows = table.querySelectorAll("tr");
+            let csvContent = "data:text/csv;charset=utf-8,";
+
+            rows.forEach(function(row) {
+                let cols = row.querySelectorAll("td, th");
+                let rowData = [];
+                cols.forEach(function(col, index) {
+                    if(index !== 0 && index !== 2 && index !== 7) { 
+                        let text = col.innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+                        rowData.push('"' + text + '"'); 
+                    }
+                });
+                csvContent += rowData.join(",") + "\r\n";
+            });
+
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Danh_Sach_Kiem_Kho.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+        
+        function toggleTable(id) {
+            const t = document.getElementById(id);
+            const opening = getComputedStyle(t).display === 'none';
+            t.style.display = opening ? 'block' : 'none';
+            if (opening) { history.replaceState(null, '', '#' + id); setTimeout(() => t.scrollIntoView({behavior:'smooth', block:'start'}), 50); }
+            else if (location.hash === '#' + id) history.replaceState(null, '', location.pathname + location.search);
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const id = location.hash.replace('#','');
+            if (id === 'lowStockTable' || id === 'highStockTable') {
+                const t = document.getElementById(id); if (t) { t.style.display='block'; setTimeout(() => t.scrollIntoView({behavior:'smooth', block:'start'}), 100); }
+            }
+        });
+        
+        function toggleImgInput() {
+            let type = document.querySelector('input[name="img_type"]:checked').value;
+            document.getElementById('p_hinh_anh_url').style.display = type === 'url' ? 'block' : 'none';
+            document.getElementById('p_hinh_anh_file').style.display = type === 'file' ? 'block' : 'none';
+        }
+
+        const SIZES = ["S", "M", "L", "XL", "XXL", "38", "39", "40", "41", "42", "FreeSize"];
+
+        function addSizeRow(name = '', qty = '') {
+            const div = document.createElement('div');
+            div.className = 'size-item';
+            let options = SIZES.map(s => `<option value="${s}" ${s === name ? 'selected' : ''}>Size ${s}</option>`).join('');
+            div.innerHTML = `
+                <select class="s-name" style="flex:2">${options}</select>
+                <input type="number" class="s-qty" placeholder="Số lượng" value="${qty}" style="flex:1" min="0" required>
+                <button type="button" class="btn-small btn-del-item" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash-can"></i> Xóa</button>
+            `;
+            document.getElementById('sizeContainer').appendChild(div);
+        }
+
+        function openModal() {
+            document.getElementById('productForm').reset();
+            document.getElementById('p_id').value = '';
+            document.getElementById('preview_img').style.display = 'none';
+            document.getElementById('sizeContainer').innerHTML = '';
+            addSizeRow(); 
+            document.getElementById('modalTitle').innerText = "THÊM SẢN PHẨM MỚI";
+            document.getElementById('productModal').classList.add('active');
+        }
+        function closeModal() { document.getElementById('productModal').classList.remove('active'); }
+
+        function openEditModalById(id) {
+            fetch('/admin/api/product/' + id)
+                .then(r => { if(!r.ok) throw new Error('Không tải được sản phẩm'); return r.json(); })
+                .then(openEditModal)
+                .catch(err => alert(err.message));
+        }
+
+        function openEditModal(p) {
+            document.getElementById('p_id').value = p.id;
+            document.getElementById('p_ma_sp').value = p.ma_sp;
+            document.getElementById('p_ten_sp').value = p.ten_sp;
+            document.getElementById('p_gia_ban').value = p.gia_ban;
+            document.getElementById('p_loai_sp').value = p.loai_sp;
+            document.getElementById('p_ma_nsx').value = p.ma_nsx;
+            document.getElementById('p_mau_sac').value = p.mau_sac;
+            document.getElementById('p_ma_vach').value = p.ma_vach || '';
+            document.getElementById('p_mo_ta').value = p.mo_ta || '';
+            
+            document.getElementById('p_hinh_anh_current').value = p.hinh_anh || '';
+            if(p.hinh_anh) {
+                document.getElementById('preview_img').src = p.hinh_anh;
+                document.getElementById('preview_img').style.display = 'block';
+                document.querySelector('input[name="img_type"][value="url"]').checked = true;
+                document.getElementById('p_hinh_anh_url').value = p.hinh_anh;
+            }
+            toggleImgInput();
+
+            document.getElementById('sizeContainer').innerHTML = '';
+            if(p.size_list && p.size_list.length > 0) {
+                p.size_list.forEach(s => addSizeRow(s.size, s.so_luong));
+            } else { addSizeRow(); }
+
+            const subInputs = document.querySelectorAll('.sub-img');
+            subInputs.forEach(inp => inp.value = ''); 
+            if(p.images_list) {
+                p.images_list.forEach((img, i) => { if(i < 4) subInputs[i].value = img.hinh_anh; });
+            }
+
+            document.getElementById('modalTitle').innerText = "CẬP NHẬT SẢN PHẨM";
+            document.getElementById('productModal').classList.add('active');
+        }
+
+        function saveProduct(e) {
+            e.preventDefault();
+            let formData = new FormData();
+            
+            formData.append('id', document.getElementById('p_id').value);
+            formData.append('ma_sp', document.getElementById('p_ma_sp').value);
+            formData.append('ten_sp', document.getElementById('p_ten_sp').value);
+            formData.append('gia_ban', document.getElementById('p_gia_ban').value);
+            formData.append('loai_sp', document.getElementById('p_loai_sp').value);
+            formData.append('ma_nsx', document.getElementById('p_ma_nsx').value);
+            formData.append('mau_sac', document.getElementById('p_mau_sac').value);
+            formData.append('ma_vach', document.getElementById('p_ma_vach').value);
+            formData.append('mo_ta', document.getElementById('p_mo_ta').value);
+            formData.append('hinh_anh_current', document.getElementById('p_hinh_anh_current').value);
+
+            let imgType = document.querySelector('input[name="img_type"]:checked').value;
+            formData.append('img_type', imgType);
+            if (imgType === 'url') formData.append('hinh_anh_url', document.getElementById('p_hinh_anh_url').value);
+            else {
+                let fileInput = document.getElementById('p_hinh_anh_file');
+                if (fileInput.files.length > 0) formData.append('hinh_anh_file', fileInput.files[0]);
+            }
+
+            let sizes = [];
+            document.querySelectorAll('.size-item').forEach(item => {
+                sizes.push({ name: item.querySelector('.s-name').value, qty: item.querySelector('.s-qty').value });
+            });
+            formData.append('sizes', JSON.stringify(sizes));
+
+            let subImages = [];
+            document.querySelectorAll('.sub-img').forEach(input => {
+                if(input.value.trim()) subImages.push(input.value.trim());
+            });
+            formData.append('sub_images', JSON.stringify(subImages));
+
+            fetch('/admin/api/product/save', { method: 'POST', body: formData })
+            .then(res => res.json()).then(res => {
+                alert(res.message);
+                if(res.status === 'success') location.reload();
+            });
+        }
+
+        function toggleStatus(id) {
+            if(!confirm("Ẩn/Hiện sản phẩm này?")) return;
+            fetch('/admin/api/product/toggle', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({product_id: id}) })
+            .then(res => res.json()).then(data => location.reload());
+        }
+
+        // HÀM XÓA SẢN PHẨM MỚI BỔ SUNG
+        function deleteProduct(id) {
+            if(!confirm("CẢNH BÁO: Bạn có chắc chắn muốn xóa cứng sản phẩm này ra khỏi hệ thống?\n\nLưu ý: Nếu sản phẩm đã phát sinh giao dịch, hệ thống sẽ chặn không cho xóa để tránh sai lệch báo cáo.")) return;
+            
+            fetch('/admin/api/product/delete', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({product_id: id}) 
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.status === 'success') location.reload();
+            });
+        }
+    </script>
+</body>
+</html>

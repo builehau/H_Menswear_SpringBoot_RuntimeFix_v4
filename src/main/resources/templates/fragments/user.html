@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">H-Menswear</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Montserrat:wght@300;400;500;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/user.css}">
+</head>
+<body>
+<header id="main-header" class="scrolled" th:fragment="header">
+    <div class="header-content">
+        <div class="logo"><a th:href="@{/home}">H-MENSWEAR</a></div>
+        <nav class="desktop-nav"><ul class="nav-links">
+            <li><a th:href="@{/home}">Trang chủ</a></li><li><a th:href="@{/products}">Sản phẩm</a></li><li><a th:href="@{/collections}">Bộ sưu tập</a></li><li><a th:href="@{/vouchers}">Khuyến mãi</a></li><li><a th:href="@{/contact}">Liên hệ</a></li>
+        </ul></nav>
+        <div class="header-icons">
+            <a th:href="@{/favorites}" sec:authorize="hasRole('CUSTOMER')"><i class="fa-regular fa-heart"></i></a>
+            <a th:href="@{/cart}" sec:authorize="hasRole('CUSTOMER')"><i class="fa-solid fa-bag-shopping"></i></a>
+            <a th:href="@{/profile}" sec:authorize="hasRole('CUSTOMER')" title="Hồ sơ"><i class="fa-regular fa-user"></i></a>
+            <a th:href="@{/login}" sec:authorize="isAnonymous()" title="Đăng nhập"><i class="fa-regular fa-user"></i></a>
+            <a th:href="@{/logout}" sec:authorize="isAuthenticated()" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+        </div>
+    </div>
+</header>
+<footer th:fragment="footer" style="background:#111;color:#ddd;padding:55px 0;margin-top:70px">
+    <div class="container" style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px">
+        <div><h2 style="font-family:'Playfair Display',serif;color:#fff">H-MENSWEAR</h2><p style="margin-top:12px;line-height:1.8;color:#999">Premium Fashion Experience — phong cách nam hiện đại, tối giản và lịch lãm.</p></div>
+        <div><b style="color:var(--gold)">KHÁM PHÁ</b><p style="margin-top:12px"><a th:href="@{/products}">Sản phẩm</a></p><p><a th:href="@{/collections}">Bộ sưu tập</a></p></div>
+        <div><b style="color:var(--gold)">HỖ TRỢ</b><p style="margin-top:12px"><a th:href="@{/contact}">Liên hệ</a></p><p><a th:href="@{/profile}" sec:authorize="hasRole('CUSTOMER')">Tài khoản</a></p></div>
+    </div>
+</footer>
+</body></html>

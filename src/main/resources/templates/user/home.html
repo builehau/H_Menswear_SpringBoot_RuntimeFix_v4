@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H-Menswear | Premium Fashion Experience</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Montserrat:wght@300;400;500;600;800&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gold: #C5A059;
+            --black: #111111;
+            --white: #FFFFFF;
+            --smoke: #F4F5F7;
+            --gray: #666666;
+            --transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', 'Montserrat', sans-serif; color: var(--black); overflow-x: hidden; background-color: var(--smoke); }
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 40px; }
+
+        /* HEADER */
+        #main-header {
+            height: 80px; display: flex; align-items: center; background: transparent;
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+            transition: transform 0.4s ease-in-out, background-color 0.4s ease, box-shadow 0.4s ease;
+        }
+        #main-header.scrolled { background: var(--white); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header-hidden { transform: translateY(-100%); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 5%; height: 100%; }
+        .logo a { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; letter-spacing: 2px; color: var(--black); transition: 0.3s; }
+        .logo:hover { transform: scale(1.02); }
+
+        .desktop-nav { flex: 1; display: flex; justify-content: center; }
+        .nav-links { display: flex; gap: 35px; }
+        .nav-links a { font-size: 13px; font-weight: 600; letter-spacing: 1px; transition: var(--transition); text-transform: uppercase; font-family: 'Playfair Display', serif;}
+        .nav-links a:hover { color: var(--gold); transform: translateY(-4px); display: inline-block;}
+        
+        .header-icons { display: flex; gap: 25px; font-size: 20px; align-items: center; justify-content: flex-end; min-width: 150px;}
+        .header-icons i { cursor: pointer; transition: 0.3s; color: var(--black); }
+        .header-icons i:hover { color: var(--gold); }
+
+        /* ASIDE MENU */
+        .side-menu { position: fixed; inset: 0; z-index: 2000; visibility: hidden; }
+        .side-menu.active { visibility: visible; }
+        .side-menu-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); opacity: 0; transition: 0.4s; }
+        .side-menu.active .side-menu-overlay { opacity: 1; }
+        .side-menu-content { 
+            position: absolute; right: -400px; top: 0; width: 100%; max-width: 400px; height: 100%; 
+            background: var(--white); padding: 50px 40px; transition: right 0.5s cubic-bezier(0.2, 1, 0.3, 1); 
+            box-shadow: -10px 0 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow-y: auto;
+        }
+        .side-menu.active .side-menu-content { right: 0; }
+        .side-menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        .side-menu-header h3 { font-family: 'Playfair Display', serif; letter-spacing: 2px; }
+        .side-menu-links { list-style: none; flex: 1; }
+        .side-menu-links li { margin-bottom: 25px; }
+        .side-menu-links a { font-size: 18px; font-family: 'Playfair Display', serif; font-weight: bold; transition: 0.3s; }
+        .side-menu-links a:hover { color: var(--gold); padding-left: 10px; }
+        .side-user-area { margin-top: auto; padding-top: 25px; border-top: 1px solid #eee; }
+
+        /* HERO SWIPER */
+        .hero-swiper { height: 100vh; }
+        .hero-slide { background-size: cover; background-position: center; display: flex; align-items: center; position: relative; }
+        .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.1) 100%); }
+        .hero-content { max-width: 800px; color: var(--black); z-index: 10; padding-left: 20px; position: relative; }
+        .hero-content h4 { letter-spacing: 7px; font-weight: 600; margin-bottom: 15px; text-transform: uppercase; font-size: 14px; color: var(--gray); }
+        .hero-content h1 { font-family: 'Playfair Display', serif; font-size: clamp(45px, 6vw, 85px); line-height: 1.05; margin-bottom: 35px; font-weight: 700; }
+        .text-gold { color: var(--gold); font-style: italic; }
+
+        .btn-gold { display: inline-block; padding: 18px 50px; background: var(--gold); color: white; text-decoration: none; font-weight: 600; letter-spacing: 2px; font-size: 13px; transition: var(--transition); border: 1px solid var(--gold); }
+        .btn-gold:hover { background: var(--black); border-color: var(--black); }
+        .btn-outline-dark { padding: 15px 35px; border: 1px solid var(--black); color: var(--black); text-decoration: none; font-size: 12px; font-weight: 600; letter-spacing: 2px; width: fit-content; transition: 0.3s; text-align: center; display: inline-block; cursor: pointer; background: transparent; }
+        .btn-outline-dark:hover { background: var(--black); color: white; }
+
+        /* CÁC SECTION DƯỚI */
+        .section { padding: 100px 0; }
+        .flex-header-center { text-align: center; margin-bottom: 50px; }
+        .section-title-center { font-size: 38px; margin-bottom: 15px; text-align: center; font-family: 'Playfair Display', serif;}
+        .view-all { color: var(--gold); font-weight: bold; border-bottom: 1px solid; display: inline-block; padding-bottom: 2px;}
+
+        /* Nổi bật / Yêu thích / Bán chạy */
+        .featured-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; }
+        .product-card { background: white; transition: var(--transition); border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); overflow: hidden; }
+        .product-card:hover { transform: translateY(-8px); }
+        .product-img { position: relative; height: 420px; overflow: hidden; background: var(--smoke); }
+        .product-img img { width: 100%; height: 100%; object-fit: cover; transition: var(--transition); }
+        .product-card:hover .product-img img { transform: scale(1.1); }
+        .badge { position: absolute; top: 15px; left: 15px; background: var(--black); color: var(--gold); padding: 5px 12px; font-size: 10px; font-weight: bold; z-index: 2; border-radius: 2px; }
+        .badge-heart { background: var(--white); color: var(--danger); }
+        .product-hover { position: absolute; bottom: -60px; left: 0; width: 100%; transition: var(--transition); }
+        .product-card:hover .product-hover { bottom: 0; }
+        .btn-view { display: block; width: 100%; padding: 20px; background: var(--black); color: white; border: none; cursor: pointer; font-weight: bold; text-align: center; }
+        .btn-view:hover { background: var(--gold); }
+        .product-info { padding: 20px 0; text-align: center; }
+        .product-info h3 { font-size: 16px; margin-bottom: 8px; font-weight: 600; text-transform: capitalize; }
+        .price .new { color: var(--gold); font-weight: bold; font-size: 16px; }
+
+        /* Story Block (Danh mục 6 ảnh đan xen) */
+        .story-block { display: flex; height: 80vh; overflow: hidden; margin-bottom: 40px; }
+        .story-block.reverse { flex-direction: row-reverse; }
+        .story-image { width: 60%; height: 100%; }
+        .story-image img { width: 100%; height: 100%; object-fit: cover; }
+        .story-content { width: 40%; display: flex; flex-direction: column; justify-content: center; padding: 0 100px; background: var(--white); }
+        .content-right { text-align: right; align-items: flex-end; }
+        .content-left { text-align: left; align-items: flex-start; }
+        .story-content span { color: var(--gold); letter-spacing: 5px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .story-content h2 { font-family: 'Playfair Display', serif; font-size: 46px; margin: 25px 0; line-height: 1.2; }
+        .story-content p { color: var(--gray); font-size: 16px; margin-bottom: 40px; line-height: 1.8; }
+
+        /* Brand */
+        .brand-container { text-align: center; max-width: 800px; margin: 0 auto; }
+        .brand-group { margin-bottom: 50px; }
+        .brand-category { letter-spacing: 4px; color: var(--gray); margin-bottom: 25px; font-size: 15px; font-weight: 700; }
+        .brand-logos { display: flex; justify-content: center; flex-wrap: wrap; gap: 20px 40px; font-weight: 800; color: #bbb; font-size: 22px; }
+        .brand-logos a { transition: 0.3s; font-family: 'Playfair Display', serif; cursor: pointer; color: inherit; text-decoration: none; }
+        .brand-logos a:hover { color: var(--gold); transform: scale(1.1); }
+        
+        .gold-line { width: 60px; height: 2px; background: var(--gold); margin: 0 auto; }
+        .section-subtitle { color: var(--gray); font-size: 16px; margin-top: 15px; }
+        .purpose-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 40px; }
+        .purpose-card { background: var(--white); transition: var(--transition); overflow: hidden; border-radius: 8px;}
+        .card-image { position: relative; height: 350px; overflow: hidden; }
+        .card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease; }
+        .purpose-card:hover .card-image img { transform: scale(1.1); }
+        .card-info { padding: 25px 0; text-align: center; }
+        .card-info span { color: var(--gold); font-size: 11px; letter-spacing: 2px; font-weight: 700; }
+        .card-info h3 { font-family: 'Playfair Display', serif; font-size: 22px; margin: 10px 0; }
+        .card-info p { font-size: 14px; color: var(--gray); line-height: 1.5; padding: 0 15px;}
+
+        /* FOOTER */
+        footer { background-color: var(--white); border-top: 1px solid rgba(0,0,0,0.05); padding-top: 80px; margin-top: 50px; }
+        .footer-top { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; margin-bottom: 60px; }
+        .footer-col h4 { font-family: 'Playfair Display', serif; font-size: 18px; margin-bottom: 25px; letter-spacing: 1px; color: var(--black); text-transform: uppercase; }
+        .footer-logo a { text-decoration: none; font-family: 'Playfair Display', serif; font-size: 28px; font-weight: bold; color: var(--black); }
+        .shop-name { font-weight: 800; font-size: 20px; font-family: 'Montserrat', sans-serif; margin-top: 15px;}
+        .shop-name span { color: var(--gold); }
+        .footer-desc { color: var(--gray); font-size: 14px; line-height: 1.8; margin-top: 15px; }
+        .footer-list { list-style: none; }
+        .footer-list li { margin-bottom: 12px; }
+        .footer-list a { text-decoration: none; color: var(--gray); font-size: 14px; display: flex; align-items: center; gap: 10px; transition: 0.3s ease; }
+        .footer-list a i { color: #ccc; font-size: 12px; transition: 0.3s; }
+        .footer-list a:hover { color: var(--gold); transform: translateX(5px); }
+        .contact-info-footer { font-size: 14px; color: var(--gray); line-height: 1.6; }
+        .contact-info-footer div { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .social-icons { display: flex; gap: 15px; margin-top: 25px; }
+        .social-btn { width: 40px; height: 40px; background: var(--smoke); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--black); text-decoration: none; transition: 0.4s; }
+        .social-btn:hover { background: var(--gold); color: var(--white); transform: translateY(-5px); }
+        .footer-bottom { background: var(--smoke); padding: 30px 0; text-align: center; border-top: 1px solid rgba(0,0,0,0.05); }
+        .footer-bottom p { color: var(--gray); font-size: 13px; letter-spacing: 0.5px; }
+
+        @media (max-width: 1200px) { .featured-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 1024px) {
+            .story-block, .story-block.reverse { flex-direction: column; height: auto; }
+            .story-image, .story-content { width: 100%; }
+            .story-image { height: 400px; }
+            .story-content { padding: 60px 40px; text-align: center; align-items: center; }
+            .purpose-grid { grid-template-columns: repeat(2, 1fr); }
+            .desktop-nav { display: none; } 
+            .footer-top { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) { .featured-grid { grid-template-columns: repeat(2, 1fr); } .hero-content h1 { font-size: 40px; } }
+        @media (max-width: 600px) {
+            .featured-grid, .purpose-grid { grid-template-columns: 1fr; }
+            .footer-top { grid-template-columns: 1fr; text-align: center; }
+            .footer-list a, .contact-info-footer div { justify-content: center; }
+            .social-icons { justify-content: center; }
+        }
+    
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text">
+
+    <header id="main-header">
+        <div class="header-content">
+            <div class="logo"><a href="/home">H-MENSWEAR</a></div>
+            <nav class="desktop-nav">
+                <ul class="nav-links">
+                    <li><a href="/products">Sản Phẩm</a></li>
+                    <li><a href="/contact">Liên Hệ</a></li>
+                    <li style="margin-left: 20px;"><a href="/collections">Bộ Sưu Tập</a></li>
+                </ul>
+            </nav>
+            <div class="header-icons">
+                <a href="/cart" title="Giỏ hàng"><i class="fa-solid fa-bag-shopping"></i></a>
+                <th:block th:if="${isCustomer}">
+                    <a href="/profile" title="Hồ sơ cá nhân"><i class="fa-regular fa-user"></i></a>
+                    <a href="#" onclick="handleLogout()" title="Đăng xuất"><i class="fa-solid fa-right-from-bracket"></i></a>
+                </th:block><th:block th:if="${not (isCustomer)}">
+                    <a href="/login" title="Đăng nhập"><i class="fa-regular fa-user"></i></a>
+                </th:block>
+                <i class="fa-solid fa-bars" onclick="toggleMenu()" title="Menu"></i> 
+            </div>
+        </div>
+    </header>
+
+    <div id="side-menu" class="side-menu">
+        <div class="side-menu-overlay" onclick="toggleMenu()"></div>
+        <div class="side-menu-content">
+            <div class="side-menu-header">
+                <h3>DANH MỤC</h3>
+                <i class="fa-solid fa-xmark" style="font-size: 24px; cursor: pointer; color: var(--black);" onclick="toggleMenu()"></i>
+            </div>
+            <ul class="side-menu-links">
+                <li><a href="/home">Trang Chủ</a></li>
+                <li><a href="/collections">Tất Cả Sản Phẩm</a></li>
+                <th:block th:each="c : ${categories}">
+                <li><a  th:href="|/collections?category=${c.id}|">[[${c.ten_loai}]]</a></li>
+                </th:block>
+                <li style="margin-top: 25px; padding-top: 25px; border-top: 1px dashed #eee;"><a href="/vouchers" style="color: var(--gold);"><i class="fa-solid fa-ticket"></i> Ưu Đãi / Khuyến Mãi</a></li>
+                <li><a href="/favorites" style="color: var(--danger);"><i class="fa-solid fa-heart"></i> Sản Phẩm Yêu Thích</a></li>
+            </ul>
+            
+            <div class="side-user-area">
+                <th:block th:if="${isCustomer}">
+                    <p style="margin-bottom: 15px; color: var(--gray); font-size: 15px;">Xin chào, <strong style="color: var(--black);">[[${currentUserName}]]</strong></p>
+                    <button onclick="handleLogout()" class="btn-outline-dark" style="width: 100%;">ĐĂNG XUẤT</button>
+                </th:block><th:block th:if="${not (isCustomer)}">
+                    <p style="margin-bottom: 15px; color: var(--gray); font-size: 15px;">Đăng nhập để nhận ưu đãi</p>
+                    <a href="/login" class="btn-outline-dark" style="width: 100%;">ĐĂNG NHẬP</a>
+                </th:block>
+            </div>
+        </div>
+    </div>
+
+    <div class="swiper hero-swiper">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide hero-slide" style="background-image: url('https://images.unsplash.com/photo-1593032465175-481ac7f401a0?q=80&w=2070');">
+                <div class="hero-overlay"></div>
+                <div class="container hero-container">
+                    <div class="hero-content">
+                        <h4>A/W Collection 2026</h4>
+                        <h1>BẢN LĨNH <br><span class="text-gold">QUÝ ÔNG</span></h1>
+                        <p style="margin-bottom: 30px; font-weight: 500; letter-spacing: 1px;">Phong cách định hình nên giá trị người đàn ông hiện đại.</p>
+                        <a href="/collections" class="btn-gold">KHÁM PHÁ NGAY</a>
+                    </div>
+                </div>
+            </div>
+            <div class="swiper-slide hero-slide" style="background-image: url('https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?q=80&w=2070');">
+                <div class="hero-overlay"></div>
+                <div class="container hero-container">
+                    <div class="hero-content">
+                        <h4>Premium Edition</h4>
+                        <h1>BỘ SƯU TẬP <br><span class="text-gold">TAILORING</span></h1>
+                        <p style="margin-bottom: 30px; font-weight: 500; letter-spacing: 1px;">Sự tinh tế đến từ từng đường kim mũi chỉ.</p>
+                        <a href="/collections" class="btn-gold">MUA BỘ SƯU TẬP</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="swiper-pagination"></div>
+    </div>
+
+    <section class="section container">
+        <div class="flex-header-center"> 
+            <h2 class="section-title-center">SẢN PHẨM NỔI BẬT</h2>
+            <a href="/collections" class="view-all">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        
+        <div class="featured-grid">
+            <th:block th:if="${not #lists.isEmpty(products)}">
+                <th:block th:each="p : ${products}">
+                <div class="product-card">
+                    <div class="product-img">
+                        <span class="badge">HOT</span>
+                        <img  th:src="|${(p.hinh_anh != null and not #strings.isEmpty(p.hinh_anh)) ? (p.hinh_anh) : ('https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&auto=format&fit=crop')}|"  th:alt="|${p.ten_sp}|">
+                        <div class="product-hover">
+                            <a  th:href="|/product/${p.id}|" class="btn-view">XEM CHI TIẾT</a>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <h3>[[${p.ten_sp}]]</h3>
+                        <p class="price">
+                            <span class="new">[[${(p.gia_ban != null) ? (#numbers.formatDecimal((p.gia_ban), 0, 'COMMA', 0, 'POINT')) : ('Liên hệ')}]] VNĐ</span>
+                        </p>
+                    </div>
+                </div>
+                </th:block>
+            </th:block><th:block th:if="${not (not #lists.isEmpty(products))}">
+                <p style="grid-column: 1 / -1; text-align: center;">Hệ thống đang cập nhật sản phẩm.</p>
+            </th:block>
+        </div>
+    </section>
+
+    <section class="ankle-story">
+        
+        
+        <div class="story-block">
+            <div class="story-image"><img src="https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?q=80&w=1000" alt="Áo Phông"></div>
+            <div class="story-content content-right">
+                <span>STREET STYLE</span>
+                <h2>ÁO PHÔNG<br>NĂNG ĐỘNG</h2>
+                <p>Mang lại sự thoải mái, trẻ trung và cá tính. Dễ dàng phối cùng quần jean hoặc quần short cho những ngày dạo phố đầy năng lượng.</p>
+                <a href="/collections" th:href="${cat_phong != null ? '/collections?category=' + cat_phong : '/collections'}" class="btn-outline-dark">KHÁM PHÁ THIẾT KẾ</a>
+            </div>
+        </div>
+
+        
+        <div class="story-block reverse">
+            <div class="story-image"><img src="https://images.unsplash.com/photo-1598808503746-f34c53b9323e?q=80&w=1000" alt="Áo Sơ Mi"></div>
+            <div class="story-content content-left">
+                <span>ELEGANCE</span>
+                <h2>ÁO SƠ MI<br>LỊCH LÃM</h2>
+                <p>Thiết kế chuẩn form, chất liệu cao cấp mang lại vẻ ngoài chỉn chu, sang trọng cho môi trường công sở hay những sự kiện quan trọng.</p>
+               <a href="/collections" th:href="${cat_somi != null ? '/collections?category=' + cat_somi : '/collections'}" class="btn-outline-dark">KHÁM PHÁ THIẾT KẾ</a>
+            </div>
+        </div>
+        
+        
+        <div class="story-block">
+            <div class="story-image"><img src="https://images.unsplash.com/photo-1626497764746-6dc36546b388?q=80&w=1000" alt="Áo Polo"></div>
+            <div class="story-content content-right">
+                <span>SMART CASUAL</span>
+                <h2>ÁO POLO<br>HIỆN ĐẠI</h2>
+                <p>Sự kết hợp hoàn hảo giữa tính thoải mái của áo phông và vẻ lịch sự của áo sơ mi. Lựa chọn linh hoạt phù hợp cho mọi hoàn cảnh.</p>
+                <a href="/collections" th:href="${cat_polo != null ? '/collections?category=' + cat_polo : '/collections'}" class="btn-outline-dark">KHÁM PHÁ THIẾT KẾ</a>
+            </div>
+        </div>
+
+        
+        <div class="story-block reverse">
+            <div class="story-image"><img src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?q=80&w=1000" alt="Áo Khoác"></div>
+            <div class="story-content content-left">
+                <span>OUTERWEAR</span>
+                <h2>ÁO KHOÁC<br>CÁ TÍNH</h2>
+                <p>Không chỉ giữ ấm bảo vệ cơ thể mà còn là điểm nhấn thời trang mạnh mẽ, giúp bạn hoàn thiện và khẳng định phong cách riêng.</p>
+               <a href="/collections" th:href="${cat_khoac != null ? '/collections?category=' + cat_khoac : '/collections'}" class="btn-outline-dark">KHÁM PHÁ THIẾT KẾ</a>
+            </div>
+        </div>
+        
+        
+        <div class="story-block">
+            <div class="story-image"><img src="https://images.unsplash.com/photo-1473966968600-fa801b869a1a?q=80&w=1000" alt="Quần Dài"></div>
+            <div class="story-content content-right">
+                <span>CLASSIC PANTS</span>
+                <h2>QUẦN DÀI<br>THANH LỊCH</h2>
+                <p>Quần âu và quần jean với form dáng chuẩn mực, tôn lên vóc dáng nam tính, dễ dàng phối hợp cùng nhiều loại trang phục khác nhau.</p>
+                <a href="/collections" th:href="${cat_quandai != null ? '/collections?category=' + cat_quandai : '/collections'}" class="btn-outline-dark">KHÁM PHÁ THIẾT KẾ</a>
+            </div>
+        </div>
+
+        
+        <div class="story-block reverse">
+            <div class="story-image"><img src="https://images.unsplash.com/photo-1560243563-062bfc001d68?q=80&w=1000" alt="Quần Ngắn"></div>
+            <div class="story-content content-left">
+                <span>SUMMER VIBES</span>
+                <h2>QUẦN NGẮN<br>THOẢI MÁI</h2>
+                <p>Lựa chọn tuyệt vời cho những ngày hè hay các hoạt động ngoài trời, mang đến sự mát mẻ và tự do tuyệt đối trong từng chuyển động.</p>
+               <a href="/collections" th:href="${cat_quanngan != null ? '/collections?category=' + cat_quanngan : '/collections'}" class="btn-outline-dark">KHÁM PHÁ THIẾT KẾ</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="section container" style="padding-top: 0;">
+        <div class="flex-header-center"> 
+            <h2 class="section-title-center">SẢN PHẨM ĐƯỢC YÊU THÍCH NHIỀU</h2>
+            <div class="gold-line"></div>
+        </div>
+        
+        <div class="featured-grid">
+            <th:block th:if="${not #lists.isEmpty(most_liked)}">
+                <th:block th:each="p : ${most_liked}">
+                <div class="product-card">
+                    <div class="product-img">
+                        <span class="badge badge-heart"><i class="fa-solid fa-heart"></i> [[${p.like_count}]]</span>
+                        <img  th:src="|${(p.hinh_anh != null and not #strings.isEmpty(p.hinh_anh)) ? (p.hinh_anh) : ('https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&auto=format&fit=crop')}|"  th:alt="|${p.ten_sp}|">
+                        <div class="product-hover">
+                            <a  th:href="|/product/${p.id}|" class="btn-view">XEM CHI TIẾT</a>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <h3>[[${p.ten_sp}]]</h3>
+                        <p class="price">
+                            <span class="new">[[${(p.gia_ban != null) ? (#numbers.formatDecimal((p.gia_ban), 0, 'COMMA', 0, 'POINT')) : ('Liên hệ')}]] VNĐ</span>
+                        </p>
+                    </div>
+                </div>
+                </th:block>
+            </th:block><th:block th:if="${not (not #lists.isEmpty(most_liked))}">
+                <p style="grid-column: 1 / -1; text-align: center;">Chưa có dữ liệu yêu thích.</p>
+            </th:block>
+        </div>
+    </section>
+
+    <section class="section container" style="padding-top: 0;">
+        <div class="flex-header-center"> 
+            <h2 class="section-title-center">SẢN PHẨM BÁN CHẠY</h2>
+            <div class="gold-line"></div>
+        </div>
+        
+        <div class="featured-grid">
+            <th:block th:if="${not #lists.isEmpty(best_sellers)}">
+                <th:block th:each="p : ${best_sellers}">
+                <div class="product-card">
+                    <div class="product-img">
+                        <span class="badge">BEST SELLER</span>
+                        <img  th:src="|${(p.hinh_anh != null and not #strings.isEmpty(p.hinh_anh)) ? (p.hinh_anh) : ('https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&auto=format&fit=crop')}|"  th:alt="|${p.ten_sp}|">
+                        <div class="product-hover">
+                            <a  th:href="|/product/${p.id}|" class="btn-view">XEM CHI TIẾT</a>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <h3>[[${p.ten_sp}]]</h3>
+                        <p class="price">
+                            <span class="new">[[${(p.gia_ban != null) ? (#numbers.formatDecimal((p.gia_ban), 0, 'COMMA', 0, 'POINT')) : ('Liên hệ')}]] VNĐ</span>
+                        </p>
+                    </div>
+                </div>
+                </th:block>
+            </th:block><th:block th:if="${not (not #lists.isEmpty(best_sellers))}">
+                <p style="grid-column: 1 / -1; text-align: center;">Chưa có dữ liệu bán chạy.</p>
+            </th:block>
+        </div>
+    </section>
+
+    <section class="section container">
+        <h2 class="section-title-center">THƯƠNG HIỆU ĐỐI TÁC</h2>
+        <div class="brand-container">
+            <div class="brand-group">
+                <h5 class="brand-category">CÁC NHÀ SẢN XUẤT HÀNG ĐẦU</h5>
+                <div class="brand-logos">
+                    <th:block th:each="b : ${brands}">
+                    <a  th:href="|/collections?brand=${b.id}|">[[${b.ten_nsx}]]</a>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section container">
+        <div class="flex-header-center">
+            <h2 class="section-title-center">GỢI Ý TRANG PHỤC</h2>
+            <div class="gold-line"></div>
+            <p class="section-subtitle">Định hình phong cách qua từng bộ phối đặc trưng</p>
+        </div>
+
+        <div class="purpose-grid">
+            <div class="purpose-card">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-1598808503746-f34c53b9323e?w=800&auto=format&fit=crop" alt="Workwear">
+                </div>
+                <div class="card-info">
+                    <span>CÔNG SỞ LỊCH LÃM</span>
+                    <h3>Sơ Mi & Quần Âu</h3>
+                    <p>Kết hợp áo sơ mi form dáng slim-fit cùng quần âu tối màu, đi kèm giày da và thắt lưng để tạo nên tổng thể chuyên nghiệp, cuốn hút.</p>
+                </div>
+            </div>
+
+            <div class="purpose-card">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=800&auto=format&fit=crop" alt="Activewear">
+                </div>
+                <div class="card-info">
+                    <span>THỂ THAO NĂNG ĐỘNG</span>
+                    <h3>Áo Phông & Quần Short</h3>
+                    <p>Phối áo phông basic chất liệu cotton thoáng mát cùng quần short kaki hoặc thể thao. Đi cùng sneaker để nhân đôi sự trẻ trung.</p>
+                </div>
+            </div>
+
+            <div class="purpose-card">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&auto=format&fit=crop" alt="Casual">
+                </div>
+                <div class="card-info">
+                    <span>DẠO PHỐ CUỐI TUẦN</span>
+                    <h3>Áo Polo & Quần Jean</h3>
+                    <p>Sự cân bằng tuyệt vời giữa thoải mái và lịch sự. Áo polo màu trung tính kết hợp cùng quần jean bụi bặm tạo phong cách nam tính, gần gũi.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container footer-top">
+            <div class="footer-col">
+                <div class="footer-logo"><a href="/home">H-MENSWEAR</a></div>
+                <p class="shop-name">LUXURY <span>MENSWEAR</span></p>
+                <p style="font-style: italic; color: var(--gold); margin-top: 5px; font-size: 12px;">“Luxury Menswear – Define Your Class”</p>
+                <p class="footer-desc">Mang đến trải nghiệm mua sắm thời trang nam cao cấp với dịch vụ chăm sóc tận tâm và chất lượng hàng đầu Việt Nam.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Liên Kết Nhanh</h4>
+                <ul class="footer-list">
+                    <li><a href="/home"><i class="fas fa-chevron-right"></i> Trang chủ</a></li>
+                    <li><a href="/collections"><i class="fas fa-chevron-right"></i> Bộ sưu tập</a></li>
+                    <li><a href="/cart"><i class="fas fa-chevron-right"></i> Giỏ hàng</a></li>
+                    <li><a href="/contact"><i class="fas fa-chevron-right"></i> Liên hệ</a></li>
+                    <th:block th:if="${not (isCustomer)}">
+                        <li><a href="/login"><i class="fas fa-chevron-right"></i> Đăng nhập</a></li>
+                    </th:block>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Hỗ Trợ Khách Hàng</h4>
+                <ul class="footer-list">
+                    <li><a href="#"><i class="fas fa-sync-alt"></i> Chính sách đổi trả</a></li>
+                    <li><a href="#"><i class="fas fa-shopping-cart"></i> Hướng dẫn mua hàng</a></li>
+                    <li><a href="#"><i class="fas fa-credit-card"></i> Thanh toán</a></li>
+                    <li><a href="#"><i class="fas fa-shield-alt"></i> Bảo hành sản phẩm</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Thông Tin Liên Hệ</h4>
+                <div class="contact-info-footer">
+                    <div><i class="fas fa-map-marker-alt" style="color: var(--gold);"></i> 123 Lê Lợi, Quận 1, TP.HCM</div>
+                    <div><i class="fas fa-phone-alt" style="color: var(--gold);"></i> 1900 123 456</div>
+                    <div><i class="fas fa-envelope" style="color: var(--gold);"></i> support@hmenswear.com</div>
+                </div>
+                <div class="social-icons">
+                    <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-btn"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p>© 2026 H-Menswear. Phân phối chính hãng các sản phẩm thời trang cao cấp.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        function toggleMenu() {
+            const sideMenu = document.getElementById('side-menu');
+            sideMenu.classList.toggle('active');
+        }
+
+        let lastScrollTop = 0;
+        const mainHeader = document.getElementById('main-header');
+
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            if (scrollTop > 50) mainHeader.classList.add('scrolled');
+            else mainHeader.classList.remove('scrolled');
+
+            if (scrollTop > lastScrollTop && scrollTop > 200) mainHeader.classList.add('header-hidden');
+            else mainHeader.classList.remove('header-hidden');
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; 
+        });
+
+        function handleLogout() {
+            if(confirm("Bạn có chắc muốn đăng xuất không?")) {
+                window.location.href = "/logout";
+            }
+        }
+
+        const swiper = new Swiper('.hero-swiper', {
+            loop: true,
+            speed: 1500,
+            autoplay: { delay: 4000, disableOnInteraction: false },
+            effect: 'fade',
+            pagination: { el: '.swiper-pagination', clickable: true },
+        });
+    </script>
+</body>
+</html>

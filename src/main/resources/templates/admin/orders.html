@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Đơn Hàng | H-Menswear Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #111; --gold: #C5A059; --bg: #f4f7f6; --white: #fff;
+            --sidebar-w: 260px; --sidebar-c: 80px; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --success: #27ae60; --danger: #e74c3c; --info: #3498db; --warning: #f39c12; --border: #eee;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg); display: flex; min-height: 100vh; overflow-x: hidden; }
+
+        /* ================= SIDEBAR THU PHÓNG BẰNG USER BOX ================= */
+        .sidebar { width: var(--sidebar-w); background: var(--primary); color: white; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; transition: var(--transition); z-index: 1000; overflow-y: auto;}
+        .sidebar::-webkit-scrollbar { display: none; }
+        .sidebar { -ms-overflow-style: none; scrollbar-width: none; }
+        body.menu-collapsed .sidebar { width: var(--sidebar-c); }
+        
+        .sidebar-header { min-height: 75px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .brand { font-weight: 700; color: var(--gold); white-space: nowrap; transition: 0.2s; font-size: 18px; letter-spacing: 1px;}
+        body.menu-collapsed .brand { display: none; }
+
+        /* USER BOX DÙNG LÀM NÚT TOGGLE MENU */
+        .user-box { padding: 15px; margin: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px; overflow: hidden; transition: var(--transition); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .user-box:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
+        body.menu-collapsed .user-box { margin: 15px 10px; padding: 10px; justify-content: center; }
+        .avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--gold), #e6c17a); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 18px; }
+        .u-info { white-space: nowrap; transition: 0.2s; }
+        .u-info p:first-child { font-weight: 700; font-size: 14px; color: #fff; margin-bottom: 4px;}
+        .u-info p:last-child { font-size: 10px; color: var(--gold); text-transform: uppercase; font-weight: 600;}
+        body.menu-collapsed .u-info { display: none; }
+
+        /* MENU LIST & PHÂN QUYỀN */
+        .nav-list { list-style: none; flex: 1; padding: 10px 0; }
+        .nav-item { display: flex; align-items: center; padding: 15px 28px; color: #a0a0a0; text-decoration: none; transition: var(--transition); border-left: 4px solid transparent; font-weight: 500;}
+        body.menu-collapsed .nav-item { justify-content: center; padding: 15px 0; border-left: none; }
+        .nav-item i { font-size: 18px; width: 25px; text-align: center; flex-shrink: 0; }
+        .nav-item span { margin-left: 15px; white-space: nowrap; transition: 0.2s;}
+        body.menu-collapsed .nav-item span { display: none; }
+        .nav-item:hover, .nav-item.active { color: white; background: rgba(255,255,255,0.05); border-left-color: var(--gold); }
+        .nav-item:hover i, .nav-item.active i { color: var(--gold); }
+
+        /* ================= MAIN CONTENT ================= */
+        .main-content { margin-left: var(--sidebar-w); width: calc(100% - var(--sidebar-w)); transition: var(--transition); padding: 30px; }
+        body.menu-collapsed .main-content { margin-left: var(--sidebar-c); width: calc(100% - var(--sidebar-c)); }
+
+        .top-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+        .export-btn { background: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 13px;}
+        .export-btn:hover { background: #219653; }
+
+        /* QUICK STATUS TABS (Tính năng mới) */
+        .quick-tabs { display: flex; gap: 30px; border-bottom: 1px solid var(--border); margin-bottom: 20px; padding: 0 10px; }
+        .tab-item { text-decoration: none; color: #777; font-weight: 600; font-size: 14px; padding: 12px 5px; border-bottom: 3px solid transparent; transition: 0.3s; }
+        .tab-item:hover { color: var(--primary); }
+        .tab-item b { margin-left:6px; min-width:20px; height:20px; padding:0 6px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; background:#eee; font-size:10px; }
+        .tab-attention { color:#c0392b !important; }
+        .tab-attention b { background:#fdecea; color:#c0392b; }
+        .tab-item.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+        /* ADVANCED FILTER */
+        .filter-card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end;}
+        .filter-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 150px;}
+        .filter-group label { font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; }
+        .filter-group input, .filter-group select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; outline: none; font-family: 'Montserrat'; font-size: 13px;}
+        .btn-filter { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; height: 43px;}
+        .btn-filter:hover { background: var(--gold); }
+        .btn-clear { color: var(--danger); text-decoration: underline; font-size: 13px; font-weight: 600; margin-left: 10px;}
+
+        /* TABLE */
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden; padding: 25px;}
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 15px; text-align: left; font-size: 11px; text-transform: uppercase; color: #888; border-bottom: 2px solid var(--border); }
+        td { padding: 18px 15px; font-size: 13px; border-bottom: 1px solid #f9f9f9; vertical-align: middle; }
+        tr:hover { background: #fdfdfd; }
+
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block;}
+        .bg-warning { background: #fff3cd; color: #856404; } /* Chờ xử lý */
+        .bg-info { background: #d1ecf1; color: #0c5460; } /* Đang giao */
+        .bg-success { background: #d4edda; color: #155724; } /* Đã thanh toán / Giao */
+        .bg-danger { background: #f8d7da; color: #721c24; } /* Đã hủy */
+
+        .btn-view { padding: 8px 16px; background: #f0f0f0; color: var(--primary); border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600; transition: 0.3s; border: 1px solid #ddd;}
+        .btn-view:hover { background: var(--primary); color: white; border-color: var(--primary);}
+    
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text">
+
+    <aside class="sidebar" id="sidebar">
+
+        
+        <div class="user-box" onclick="toggleSidebar()" title="Thu/Phóng Menu (Click)">
+            <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="u-info">
+                <p>[[${currentUserName}]]</p>
+                <p>[[${currentUserRole}]]</p>
+            </div>
+        </div>
+
+        <nav class="nav-list">
+            <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house"></i> <span>Tổng Quan</span></a>
+            
+            <th:block th:if="${currentUserRole == 'Quản lý'}">
+            <a href="/admin/reports" class="nav-item"><i class="fa-solid fa-chart-pie"></i> <span>Vận Hành</span></a>
+            <a href="/admin/revenue" class="nav-item"><i class="fa-solid fa-hand-holding-dollar"></i> <span>Doanh Thu</span></a>
+
+        <a href="/admin/audit-logs" class="nav-item"><i class="fa-solid fa-file-lines"></i> <span>Nhật Ký</span></a>
+
+         <a href="/admin/vouchers" class="nav-item"><i class="fa-solid fa-ticket"></i> <span>Khuyến Mãi</span></a>
+                             <a href="/admin/employees" class="nav-item"><i class="fa-solid fa-user-shield"></i> <span>Nhân Viên</span></a>
+         
+         
+            
+
+            </th:block>
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV xác nhận đơn')}">
+                 <a href="/admin/customers" class="nav-item"><i class="fa-solid fa-users"></i> <span>Khách Hàng</span></a>
+            <a href="/admin/orders" class="nav-item active"><i class="fa-solid fa-cart-flatbed"></i> <span>Đơn Hàng</span></a>
+       
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV Kho')}">
+            <a href="/admin/products" class="nav-item"><i class="fa-solid fa-box"></i> <span>Sản Phẩm</span></a>
+            <a href="/admin/manufacturers" class="nav-item"><i class="fa-solid fa-industry"></i> <span>Nhà Sản Xuất</span></a>
+            </th:block>
+ 
+    </nav>
+        
+        <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;">
+            <a href="/logout" class="nav-item" style="padding:0; color:var(--danger);"><i class="fa-solid fa-power-off"></i> <span>Đăng Xuất</span></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-navbar">
+            <h2 style="font-weight: 700; color: var(--primary); font-size: 20px;">Danh Sách Đơn Hàng</h2>
+            <button class="export-btn" onclick="exportToCSV()"><i class="fa-solid fa-file-csv"></i> Xuất File Đơn Hàng</button>
+        </div>
+
+        <div class="quick-tabs">
+            <a href="/admin/orders" class="tab-item" th:classappend="${stage == null or stage == '' ? ' active' : ''}">Tất cả <b th:text="${stageCounts.all}">0</b></a>
+            <a href="/admin/orders?stage=attention" class="tab-item tab-attention" th:classappend="${stage == 'attention' ? ' active' : ''}"><i class="fa-solid fa-triangle-exclamation"></i> Cần xử lý <b th:text="${stageCounts.attention}">0</b></a>
+            <a href="/admin/orders?stage=new" class="tab-item" th:classappend="${stage == 'new' ? ' active' : ''}">Mới đặt <b th:text="${stageCounts.new}">0</b></a>
+            <a href="/admin/orders?stage=packing" class="tab-item" th:classappend="${stage == 'packing' ? ' active' : ''}">Đang đóng gói <b th:text="${stageCounts.packing}">0</b></a>
+            <a href="/admin/orders?stage=shipping" class="tab-item" th:classappend="${stage == 'shipping' ? ' active' : ''}">Đang giao <b th:text="${stageCounts.shipping}">0</b></a>
+            <a href="/admin/orders?stage=completed" class="tab-item" th:classappend="${stage == 'completed' ? ' active' : ''}">Hoàn tất <b th:text="${stageCounts.completed}">0</b></a>
+            <a href="/admin/orders?stage=cancelled" class="tab-item" th:classappend="${stage == 'cancelled' ? ' active' : ''}">Đã hủy <b th:text="${stageCounts.cancelled}">0</b></a>
+        </div>
+
+        <form class="filter-card" method="GET" action="/admin/orders">
+            <input type="hidden" name="stage" th:value="${stage}">
+            <input type="hidden" name="status" value="">
+            <div class="filter-group" style="flex:2;"><label>Tìm kiếm</label><input type="text" name="search" placeholder="Mã đơn, Tên KH, SĐT..." th:value="${search}"></div>
+            <div class="filter-group"><label>Từ ngày</label><input type="date" name="start_date" th:value="${start_date}"></div>
+            <div class="filter-group"><label>Đến ngày</label><input type="date" name="end_date" th:value="${end_date}"></div>
+            <div class="filter-group"><label>Tháng</label><select name="month"><option value="">-- Tất cả --</option><option th:each="m : ${#numbers.sequence(1,12)}" th:value="${m}" th:selected="${month == #strings.toString(m)}" th:text="|Tháng ${m}|"></option></select></div>
+            <div class="filter-group"><label>Năm</label><select name="year"><option value="">-- Tất cả --</option><option th:each="y : ${years}" th:value="${y}" th:selected="${year == #strings.toString(y)}" th:text="${y}"></option></select></div>
+            <div><button type="submit" class="btn-filter"><i class="fa-solid fa-filter"></i> Lọc</button><a href="/admin/orders" class="btn-clear">Xóa lọc</a></div>
+        </form>
+
+        <div class="card">
+            <table id="orderTable">
+                <thead><tr><th>Mã Đơn</th><th>Thời gian đặt</th><th>Khách Hàng</th><th style="text-align:right;">Tổng Tiền</th><th style="text-align:center;">Trạng Thái</th><th style="text-align:right;">Thao Tác</th></tr></thead>
+                <tbody>
+                    <tr th:each="order : ${orders}">
+                        <td style="color:var(--primary);"><strong th:text="${order.ma_hd}"></strong></td>
+                        <td style="color:#666;" th:text="${order.ngay_lap_text}"></td>
+                        <td><div style="font-weight:600;" th:text="${order.ten_kh}"></div><div style="color:#888;font-size:12px;margin-top:3px;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> <span th:text="${order.sdt}"></span></div></td>
+                        <td style="font-weight:700;color:var(--gold);text-align:right;" th:text="|${order.tong_tien_text}đ|"></td>
+                        <td style="text-align:center;"><span class="badge" th:classappend="${(order.trang_thai == 'Đã thanh toán' or order.trang_thai == 'Đã giao' or order.trang_thai == 'Hoàn thành') ? ' bg-success' : ((order.trang_thai == 'Đã hủy' or order.trang_thai == 'Yêu cầu hủy') ? ' bg-danger' : (order.trang_thai == 'Đang giao' ? ' bg-info' : ' bg-warning'))}" th:text="${order.trang_thai}"></span></td>
+                        <td style="text-align:right;"><a th:href="@{/admin/order/{id}(id=${order.id})}" class="btn-view"><i class="fa-solid fa-eye"></i> Chi tiết</a></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(orders)}"><td colspan="6" style="text-align:center;padding:40px 0;color:#888;">Không tìm thấy đơn hàng nào phù hợp với điều kiện lọc.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // TOGGLE MENU MƯỢT MÀ
+        function toggleSidebar() {
+            document.body.classList.toggle('menu-collapsed');
+            localStorage.setItem('admin_sidebar_collapsed', document.body.classList.contains('menu-collapsed'));
+        }
+        if (localStorage.getItem('admin_sidebar_collapsed') === 'true') {
+            document.body.classList.add('menu-collapsed');
+        }
+
+        // XUẤT FILE CSV
+        function exportToCSV() {
+            let table = document.getElementById("orderTable");
+            let rows = table.querySelectorAll("tr");
+            let csvContent = "data:text/csv;charset=utf-8,";
+
+            rows.forEach(function(row) {
+                let cols = row.querySelectorAll("td, th");
+                let rowData = [];
+                cols.forEach(function(col) {
+                    // Xóa khoảng trắng thừa và bỏ cột cuối (Thao tác)
+                    if(col.cellIndex !== 5) {
+                        let text = col.innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+                        rowData.push('"' + text + '"'); 
+                    }
+                });
+                csvContent += rowData.join(",") + "\r\n";
+            });
+
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Danh_Sach_Don_Hang.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+    </script>
+</body>
+</html>

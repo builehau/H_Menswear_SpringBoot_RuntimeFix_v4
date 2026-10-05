@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Mã Giảm Giá | H-Menswear Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #111; --gold: #C5A059; --bg: #f4f7f6; --white: #fff; --border: #eee;
+            --sidebar-w: 260px; --sidebar-c: 80px; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --danger: #e74c3c; --success: #27ae60; --info: #3498db; --warning: #f39c12;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg); display: flex; min-height: 100vh; overflow-x: hidden; color: var(--primary); }
+
+        /* ================= SIDEBAR ĐỒNG BỘ ================= */
+        .sidebar { width: var(--sidebar-w); background: var(--primary); color: white; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; transition: var(--transition); z-index: 1000; overflow-y: auto;}
+        .sidebar::-webkit-scrollbar { display: none; }
+        .sidebar { -ms-overflow-style: none; scrollbar-width: none; }
+        body.menu-collapsed .sidebar { width: var(--sidebar-c); }
+        
+        .sidebar-header { min-height: 75px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .brand { font-weight: 700; color: var(--gold); white-space: nowrap; transition: 0.2s; font-size: 18px; letter-spacing: 1px;}
+        body.menu-collapsed .brand { display: none; }
+
+        .user-box { padding: 15px; margin: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px; overflow: hidden; transition: var(--transition); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .user-box:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
+        body.menu-collapsed .user-box { margin: 15px 10px; padding: 10px; justify-content: center; }
+        .avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--gold), #e6c17a); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 18px; }
+        .u-info { white-space: nowrap; transition: 0.2s; }
+        .u-info p:first-child { font-weight: 700; font-size: 14px; color: #fff; margin-bottom: 4px;}
+        .u-info p:last-child { font-size: 10px; color: var(--gold); text-transform: uppercase; font-weight: 600;}
+        body.menu-collapsed .u-info { display: none; }
+
+        .nav-list { list-style: none; flex: 1; padding: 10px 0; }
+        .nav-item { display: flex; align-items: center; padding: 15px 28px; color: #a0a0a0; text-decoration: none; transition: var(--transition); border-left: 4px solid transparent; font-weight: 500;}
+        body.menu-collapsed .nav-item { justify-content: center; padding: 15px 0; border-left: none; }
+        .nav-item i { font-size: 18px; width: 25px; text-align: center; flex-shrink: 0; }
+        .nav-item span { margin-left: 15px; white-space: nowrap; transition: 0.2s;}
+        body.menu-collapsed .nav-item span { display: none; }
+        .nav-item:hover, .nav-item.active { color: white; background: rgba(255,255,255,0.05); border-left-color: var(--gold); }
+        .nav-item:hover i, .nav-item.active i { color: var(--gold); }
+
+        /* ================= MAIN CONTENT ================= */
+        .main-content { margin-left: var(--sidebar-w); width: calc(100% - var(--sidebar-w)); transition: var(--transition); padding: 30px; }
+        body.menu-collapsed .main-content { margin-left: var(--sidebar-c); width: calc(100% - var(--sidebar-c)); }
+
+        .top-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+        .btn-add { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 13px;}
+        .btn-add:hover { background: var(--gold); }
+
+        /* Bảng Table */
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); padding: 25px;}
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 15px; text-align: left; font-size: 11px; text-transform: uppercase; color: #888; border-bottom: 2px solid var(--border); }
+        td { padding: 18px 15px; font-size: 13px; border-bottom: 1px solid #f9f9f9; vertical-align: middle; }
+        
+        .code-box { background: #FFFDF5; border: 1px dashed var(--gold); color: var(--gold); padding: 5px 10px; border-radius: 4px; font-weight: 700; letter-spacing: 1px; font-size: 14px;}
+        
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase;}
+        .st-active { background: #e8f5e9; color: var(--success); }
+        .st-expired { background: #fdf2f2; color: var(--danger); }
+        .st-empty { background: #fff3cd; color: #856404; }
+
+        .btn-action { border: none; background: transparent; cursor: pointer; font-size: 16px; margin-right: 15px; transition: 0.3s;}
+        .btn-edit { color: var(--info); }
+        .btn-delete { color: var(--danger); }
+        .btn-action:hover { transform: scale(1.1); }
+
+        /* Modal Form */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px);}
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);}
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;}
+        .btn-close { background: #f0f0f0; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; transition: 0.3s;}
+        .btn-close:hover { background: var(--danger); color: white;}
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 5px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Montserrat'; outline: none; transition: 0.3s; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text">
+
+    <aside class="sidebar" id="sidebar">
+     
+        
+        <div class="user-box" onclick="toggleSidebar()" title="Thu/Phóng Menu (Click)">
+            <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="u-info">
+                <p>[[${currentUserName}]]</p>
+                <p>[[${currentUserRole}]]</p>
+            </div>
+        </div>
+
+          <nav class="nav-list">
+            <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house"></i> <span>Tổng Quan</span></a>
+            
+            <th:block th:if="${currentUserRole == 'Quản lý'}">
+            <a href="/admin/reports" class="nav-item"><i class="fa-solid fa-chart-pie"></i> <span>Vận Hành</span></a>
+            <a href="/admin/revenue" class="nav-item"><i class="fa-solid fa-hand-holding-dollar"></i> <span>Doanh Thu</span></a>
+
+        <a href="/admin/audit-logs" class="nav-item"><i class="fa-solid fa-file-lines"></i> <span>Nhật Ký</span></a>
+
+         <a href="/admin/vouchers" class="nav-item active"><i class="fa-solid fa-ticket"></i> <span>Khuyến Mãi</span></a>
+                             <a href="/admin/employees" class="nav-item"><i class="fa-solid fa-user-shield"></i> <span>Nhân Viên</span></a>
+         
+         
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV xác nhận đơn')}">
+                 <a href="/admin/customers" class="nav-item"><i class="fa-solid fa-users"></i> <span>Khách Hàng</span></a>
+            <a href="/admin/orders" class="nav-item"><i class="fa-solid fa-cart-flatbed"></i> <span>Đơn Hàng</span></a>
+       
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV Kho')}">
+            <a href="/admin/products" class="nav-item"><i class="fa-solid fa-box"></i> <span>Sản Phẩm</span></a>
+            <a href="/admin/manufacturers" class="nav-item"><i class="fa-solid fa-industry"></i> <span>Nhà Sản Xuất</span></a>
+            </th:block>
+ 
+    </nav>
+        
+        <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;">
+            <a href="/logout" class="nav-item" style="padding:0; color:var(--danger);"><i class="fa-solid fa-power-off"></i> <span>Đăng Xuất</span></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-navbar">
+            <h2 style="font-weight: 700; color: var(--primary); font-size: 20px;">Quản lý Mã Giảm Giá</h2>
+            <button class="btn-add" onclick="openModal()"><i class="fa-solid fa-plus"></i> Tạo Mã Mới</button>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã Voucher</th>
+                        <th>Khuyến Mãi</th>
+                        <th>Điều Kiện (Đơn Tối Thiểu)</th>
+                        <th style="text-align: center;">Số Lượng</th>
+                        <th>Hạn Sử Dụng</th>
+                        <th style="text-align: center;">Trạng Thái</th>
+                        <th style="text-align: right;">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <th:block th:each="v : ${vouchers}">
+                    <tr>
+                        <td><span class="code-box">[[${v.ma_voucher}]]</span></td>
+                        <td>
+                            <strong style="color: var(--gold);">
+                                <th:block th:if="${v.loai_giam == 'Phần trăm'}"> Giảm [[${v.gia_tri}]]%
+                                </th:block><th:block th:if="${not (v.loai_giam == 'Phần trăm')}"> Giảm [[${#numbers.formatDecimal((v.gia_tri), 0, 'COMMA', 0, 'POINT')}]]đ </th:block>
+                            </strong>
+                        </td>
+                        <td>Từ [[${#numbers.formatDecimal((v.don_toi_thieu), 0, 'COMMA', 0, 'POINT')}]]đ</td>
+                        <td style="text-align: center; font-weight: bold;">[[${v.so_luong}]]</td>
+                        <td>[[${(v.ngay_het_han != null) ? (v.ngay_het_han) : ('Không giới hạn')}]]</td>
+                        <td style="text-align: center;">
+                            <th:block th:if="${v.trang_thai == 'Đang chạy'}"> <span class="status-badge st-active">Đang chạy</span>
+                            </th:block><th:block th:if="${(not (v.trang_thai == 'Đang chạy')) and (v.trang_thai == 'Hết hạn')}"> <span class="status-badge st-expired">Hết hạn</span>
+                            </th:block><th:block th:if="${not (v.trang_thai == 'Đang chạy') and not (v.trang_thai == 'Hết hạn')}"> <span class="status-badge st-empty">Hết lượt</span> </th:block>
+                        </td>
+                        <td style="text-align: right;">
+                            <button class="btn-action btn-edit" th:onclick="|editVoucherById(${v.id})|"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn-action btn-delete"  th:onclick="|deleteVoucher(${v.id})|"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    </th:block><th:block th:if="${#lists.isEmpty(vouchers)}">
+                    <tr><td colspan="7" style="text-align: center; padding: 40px; color: #888;">Chưa có mã giảm giá nào.</td></tr>
+                    </th:block>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div class="modal" id="voucherModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm Mã Giảm Giá</h3>
+                <button class="btn-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="voucherForm" onsubmit="saveVoucher(event)">
+                <input type="hidden" id="v_id">
+                
+                <div class="form-group">
+                    <label>Mã Voucher (Code) *</label>
+                    <input type="text" id="v_ma" placeholder="VD: TET2026, FREESHIP..." required style="text-transform: uppercase;">
+                </div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Loại Giảm</label>
+                        <select id="v_loai">
+                            <option value="Tiền mặt">Trừ Tiền Mặt (VNĐ)</option>
+                            <option value="Phần trăm">Trừ Phần Trăm (%)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mức Giảm (Giá trị) *</label>
+                        <input type="number" id="v_giatri" placeholder="VD: 50000 hoặc 10" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Áp dụng cho Đơn hàng Tối thiểu từ (VNĐ) *</label>
+                    <input type="number" id="v_toithieu" value="0" required>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Số lượng mã *</label>
+                        <input type="number" id="v_soluong" value="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ngày hết hạn</label>
+                        <input type="date" id="v_hethan">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-add" style="width: 100%; justify-content: center; margin-top: 10px; font-size: 14px;">LƯU THÔNG TIN</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // TOGGLE MENU MƯỢT MÀ BẰNG USER-BOX
+        function toggleSidebar() {
+            document.body.classList.toggle('menu-collapsed');
+            localStorage.setItem('admin_sidebar_collapsed', document.body.classList.contains('menu-collapsed'));
+        }
+        // Giữ trạng thái đóng mở khi load lại trang
+        if (localStorage.getItem('admin_sidebar_collapsed') === 'true') {
+            document.body.classList.add('menu-collapsed');
+        }
+
+        const modal = document.getElementById('voucherModal');
+
+        function openModal() {
+            document.getElementById('modalTitle').innerText = "Tạo Mã Giảm Giá Mới";
+            document.getElementById('voucherForm').reset();
+            document.getElementById('v_id').value = "";
+            modal.classList.add('active');
+        }
+
+        function closeModal() { modal.classList.remove('active'); }
+
+        function editVoucherById(id) {
+            fetch('/admin/api/voucher/' + id)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') editVoucher(data.data);
+                    else alert(data.message || 'Không tải được thông tin voucher.');
+                })
+                .catch(() => alert('Không tải được thông tin voucher.'));
+        }
+
+        function editVoucher(v) {
+            document.getElementById('modalTitle').innerText = "Cập Nhật Mã Giảm Giá";
+            document.getElementById('v_id').value = v.id;
+            document.getElementById('v_ma').value = v.ma_voucher;
+            document.getElementById('v_loai').value = v.loai_giam;
+            document.getElementById('v_giatri').value = v.gia_tri;
+            document.getElementById('v_toithieu').value = v.don_toi_thieu;
+            document.getElementById('v_soluong').value = v.so_luong;
+            document.getElementById('v_hethan').value = v.ngay_het_han ? v.ngay_het_han.split(' ')[0] : '';
+            modal.classList.add('active');
+        }
+
+        function saveVoucher(e) {
+            e.preventDefault();
+            const data = {
+                id: document.getElementById('v_id').value,
+                ma_voucher: document.getElementById('v_ma').value.toUpperCase(),
+                loai_giam: document.getElementById('v_loai').value,
+                gia_tri: document.getElementById('v_giatri').value,
+                don_toi_thieu: document.getElementById('v_toithieu').value,
+                so_luong: document.getElementById('v_soluong').value,
+                ngay_het_han: document.getElementById('v_hethan').value || null
+            };
+
+            fetch('/admin/api/voucher/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') location.reload();
+                else alert(res.message);
+            });
+        }
+
+        function deleteVoucher(id) {
+            if(!confirm("Xác nhận xóa mã giảm giá này?")) return;
+            fetch('/admin/api/voucher/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: id})
+            }).then(() => location.reload());
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Nhà Sản Xuất | H-Menswear Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #111; --gold: #C5A059; --bg: #f8f9fa; --white: #fff; --border: #eee; --sidebar-w: 260px; --sidebar-c: 80px; --transition: all 0.3s ease; --danger: #e74c3c; --success: #27ae60; --info: #3498db; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg); display: flex; min-height: 100vh; overflow-x: hidden; color: var(--primary); }
+
+        /* ================= SIDEBAR THU PHÓNG BẰNG USER BOX ================= */
+        .sidebar { width: var(--sidebar-w); background: var(--primary); color: white; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; transition: var(--transition); z-index: 1000; overflow-y: auto;}
+        .sidebar::-webkit-scrollbar { display: none; }
+        .sidebar { -ms-overflow-style: none; scrollbar-width: none; }
+        body.menu-collapsed .sidebar { width: var(--sidebar-c); }
+        
+        .sidebar-header { min-height: 75px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .brand { font-weight: 700; color: var(--gold); white-space: nowrap; transition: 0.2s; font-size: 18px; letter-spacing: 1px;}
+        body.menu-collapsed .brand { display: none; }
+
+        .user-box { padding: 15px; margin: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px; overflow: hidden; transition: var(--transition); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .user-box:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
+        body.menu-collapsed .user-box { margin: 15px 10px; padding: 10px; justify-content: center; }
+        .avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--gold), #e6c17a); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 18px; }
+        .u-info { white-space: nowrap; transition: 0.2s; }
+        .u-info p:first-child { font-weight: 700; font-size: 14px; color: #fff; margin-bottom: 4px;}
+        .u-info p:last-child { font-size: 10px; color: var(--gold); text-transform: uppercase; font-weight: 600;}
+        body.menu-collapsed .u-info { display: none; }
+
+        .nav-list { list-style: none; flex: 1; padding: 10px 0; }
+        .nav-item { display: flex; align-items: center; padding: 15px 28px; color: #a0a0a0; text-decoration: none; transition: var(--transition); border-left: 4px solid transparent; font-weight: 500;}
+        body.menu-collapsed .nav-item { justify-content: center; padding: 15px 0; border-left: none; }
+        .nav-item i { font-size: 18px; width: 25px; text-align: center; flex-shrink: 0; }
+        .nav-item span { margin-left: 15px; white-space: nowrap; transition: 0.2s;}
+        body.menu-collapsed .nav-item span { display: none; }
+        .nav-item:hover, .nav-item.active { color: white; background: rgba(255,255,255,0.05); border-left-color: var(--gold); }
+        .nav-item:hover i, .nav-item.active i { color: var(--gold); }
+
+        /* ================= MAIN CONTENT ================= */
+        .content { margin-left: var(--sidebar-w); width: calc(100% - var(--sidebar-w)); padding: 40px; transition: var(--transition); }
+        body.menu-collapsed .content { margin-left: var(--sidebar-c); width: calc(100% - var(--sidebar-c)); }
+
+        .top-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+        .export-btn { background: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 13px;}
+        .export-btn:hover { background: #219653; }
+
+        .card { background: var(--white); border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); padding: 30px; margin-bottom: 25px; border: 1px solid rgba(0,0,0,0.02); }
+        
+        .filter-bar { display: flex; gap: 15px; align-items: center; justify-content: space-between; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .search-box { position: relative; width: 350px; }
+        .search-box input { width: 100%; padding: 12px 15px 12px 35px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Montserrat'; outline: none; transition: 0.3s;}
+        .search-box input:focus { border-color: var(--gold); }
+        .search-box i { position: absolute; left: 12px; top: 14px; color: #999; }
+        .btn-add { background: var(--primary); color: white; padding: 12px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 13px;}
+        .btn-add:hover { background: var(--gold); }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; border-bottom: 2px solid var(--border); color: #888; font-size: 11px; text-transform: uppercase; }
+        td { padding: 18px 15px; border-bottom: 1px solid #f9f9f9; font-size: 13px; vertical-align: middle; }
+        tr:hover { background: #fdfdfd; }
+        
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; background: #e8f5e9; color: var(--success); cursor: pointer; transition: 0.3s; border: 1px solid #c3e6cb; display: inline-block;}
+        .badge:hover { background: var(--success); color: white; }
+        .badge.zero { background: #fdf2f2; color: var(--danger); cursor: default; border-color: #f5c6cb; }
+        .badge.zero:hover { background: #fdf2f2; color: var(--danger); }
+
+        /* Nút copy & Mail link */
+        .copy-btn { border: none; background: #f0f0f0; color: #555; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 10px; margin-left: 5px; }
+        .copy-btn:hover { background: var(--gold); color: white; }
+        .email-link { color: var(--info); text-decoration: none; font-weight: 500; transition: 0.2s; }
+        .email-link:hover { color: #2980b9; text-decoration: underline; }
+
+        .action-btns button { border: none; background: transparent; cursor: pointer; padding: 5px; font-size: 16px; margin-right: 12px; transition: 0.2s;}
+        .btn-edit { color: var(--info); }
+        .btn-delete { color: var(--danger); }
+        .action-btns button:hover { transform: scale(1.2); }
+
+        /* PHÂN TRANG */
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 25px; }
+        .btn-page { display: flex; align-items: center; justify-content: center; min-width: 35px; height: 35px; border: 1px solid #ddd; color: #555; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600; transition: 0.3s; }
+        .btn-page:hover, .btn-page.active { background: var(--gold); color: white; border-color: var(--gold); }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px);}
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 35px; border-radius: 12px; width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2);}
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px;}
+        .modal-header h3 { color: var(--primary); font-weight: 700; letter-spacing: 0.5px;}
+        .close-modal { cursor: pointer; font-size: 20px; color: #888; transition: 0.3s;}
+        .close-modal:hover { color: var(--danger); }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .form-group.full { grid-column: span 2; }
+        .form-group label { font-size: 11px; font-weight: 700; margin-bottom: 8px; color: #555; text-transform: uppercase; }
+        input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Montserrat'; outline: none; font-size: 13px; transition: 0.3s;}
+        input:focus, textarea:focus { border-color: var(--gold); }
+        
+        /* TABLE TRONG MODAL XEM SẢN PHẨM */
+        .prod-mini-img { width: 45px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #eee; }
+    
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text">
+
+    <aside class="sidebar" id="sidebar">
+
+        
+        <div class="user-box" onclick="toggleSidebar()" title="Thu/Phóng Menu (Click)">
+            <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="u-info">
+                <p>[[${currentUserName}]]</p>
+                <p>[[${currentUserRole}]]</p>
+            </div>
+        </div>
+
+        <nav class="nav-list">
+            <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house"></i> <span>Tổng Quan</span></a>
+            
+            <th:block th:if="${currentUserRole == 'Quản lý'}">
+            <a href="/admin/reports" class="nav-item"><i class="fa-solid fa-chart-pie"></i> <span>Vận Hành</span></a>
+            <a href="/admin/revenue" class="nav-item"><i class="fa-solid fa-hand-holding-dollar"></i> <span>Doanh Thu</span></a>
+
+        <a href="/admin/audit-logs" class="nav-item"><i class="fa-solid fa-file-lines"></i> <span>Nhật Ký</span></a>
+
+         <a href="/admin/vouchers" class="nav-item"><i class="fa-solid fa-ticket"></i> <span>Khuyến Mãi</span></a>
+                             <a href="/admin/employees" class="nav-item"><i class="fa-solid fa-user-shield"></i> <span>Nhân Viên</span></a>
+         
+         
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV xác nhận đơn')}">
+                 <a href="/admin/customers" class="nav-item"><i class="fa-solid fa-users"></i> <span>Khách Hàng</span></a>
+            <a href="/admin/orders" class="nav-item"><i class="fa-solid fa-cart-flatbed"></i> <span>Đơn Hàng</span></a>
+       
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV Kho')}">
+            <a href="/admin/products" class="nav-item"><i class="fa-solid fa-box"></i> <span>Sản Phẩm</span></a>
+            <a href="/admin/manufacturers" class="nav-item active"><i class="fa-solid fa-industry"></i> <span>Nhà Sản Xuất</span></a>
+            </th:block>
+ 
+    </nav>
+        
+        <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;">
+            <a href="/logout" class="nav-item" style="padding:0; color:var(--danger);"><i class="fa-solid fa-power-off"></i> <span>Đăng Xuất</span></a>
+        </div>
+    </aside>
+
+    <main class="content">
+        <div class="top-navbar">
+            <h2 style="margin-bottom: 0; font-weight: 700; font-size: 20px; color: var(--primary);">Quản lý Nhà Sản Xuất</h2>
+            <button class="export-btn" onclick="exportToCSV()"><i class="fa-solid fa-file-csv"></i> Xuất Data NSX</button>
+        </div>
+
+        <div class="card">
+            <form class="filter-bar" method="GET" action="/admin/manufacturers">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="search" placeholder="Tra cứu theo mã, tên NSX, email..."  th:value="|${search}|">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn-add"><i class="fa-solid fa-filter"></i> TÌM KIẾM</button>
+                    <button type="button" class="btn-add" onclick="openNsxModal()"><i class="fa-solid fa-plus"></i> THÊM MỚI</button>
+                </div>
+            </form>
+
+            <table id="nsxTable">
+                <thead>
+                    <tr>
+                        <th>Mã NSX</th>
+                        <th>Tên Nhà Sản Xuất</th>
+                        <th>Quốc Gia</th>
+                        <th>Email Liên Hệ</th>
+                        <th style="text-align: center;">SP Đang Cung Cấp</th>
+                        <th style="text-align: right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <th:block th:each="m : ${manufacturers}">
+                    <tr class="item-row">
+                        <td>
+                            <b style="color: var(--primary);">[[${m.ma_nsx}]]</b>
+                            <button class="copy-btn" type="button" th:attr="data-copy=${m.ma_nsx}" onclick="copyText(this.dataset.copy)" title="Copy Mã NSX"><i class="fa-solid fa-copy"></i></button>
+                        </td>
+                        <td style="color: var(--gold); font-weight: 700;">[[${m.ten_nsx}]]</td>
+                        <td>[[${#strings.isEmpty(m.quoc_gia) ? '---' : m.quoc_gia}]]</td>
+                        <td>
+                            <th:block th:if="${not #strings.isEmpty(m.lien_he)}">
+                                <a  th:href="|mailto:${m.lien_he}|" class="email-link" title="Gửi mail cho NSX"><i class="fa-solid fa-envelope" style="margin-right: 5px; color: #aaa;"></i>[[${m.lien_he}]]</a>
+                                <button class="copy-btn" type="button" th:attr="data-copy=${m.lien_he}" onclick="copyText(this.dataset.copy)" title="Copy Email"><i class="fa-solid fa-copy"></i></button>
+                            </th:block><th:block th:if="${#strings.isEmpty(m.lien_he)}">
+                                <span style="color: #aaa; font-style: italic;">Chưa có</span>
+                            </th:block>
+                        </td>
+                        <td style="text-align: center;">
+                            <th:block th:if="${m.so_luong_sp > 0}">
+                                <span class="badge" th:attr="data-id=${m.id},data-name=${m.ten_nsx}" onclick="viewProducts(this.dataset.id, this.dataset.name)" title="Nhấn để xem danh sách SP">
+                                    <i class="fa-solid fa-box-open"></i> [[${m.so_luong_sp}]] Sản phẩm
+                                </span>
+                            </th:block><th:block th:if="${not (m.so_luong_sp > 0)}">
+                                <span class="badge zero"><i class="fa-solid fa-box"></i> Trống</span>
+                            </th:block>
+                        </td>
+                        <td class="action-btns" style="text-align: right;">
+                            <button class="btn-edit" type="button" th:attr="data-id=${m.id}" onclick="openEditModalById(this.dataset.id)" title="Sửa thông tin"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn-delete" type="button" th:attr="data-id=${m.id}" onclick="deleteNsx(this.dataset.id)" title="Xóa NSX"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                    </th:block><th:block th:if="${#lists.isEmpty(manufacturers)}">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #888;">Không tìm thấy nhà sản xuất nào.</td>
+                    </tr>
+                    </th:block>
+                </tbody>
+            </table>
+
+            <th:block th:if="${total_pages > 1}">
+            <div class="pagination">
+                <th:block th:if="${current_page > 1}">
+                    <a  th:href="@{/admin/manufacturers(search=${search},page=${current_page - 1})}" class="btn-page"><i class="fa-solid fa-chevron-left"></i></a>
+                </th:block>
+
+                <th:block th:each="p_num : ${#numbers.sequence(1, total_pages)}">
+                    <a  th:href="@{/admin/manufacturers(search=${search},page=${p_num})}" class="btn-page" th:classappend="${p_num == current_page ? ' active' : ''}">[[${p_num}]]</a>
+                </th:block>
+
+                <th:block th:if="${current_page < total_pages}">
+                    <a  th:href="@{/admin/manufacturers(search=${search},page=${current_page + 1})}" class="btn-page"><i class="fa-solid fa-chevron-right"></i></a>
+                </th:block>
+            </div>
+            </th:block>
+        </div>
+    </main>
+
+    <div class="modal" id="nsxModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">THÊM NHÀ SẢN XUẤT</h3>
+                <i class="fa-solid fa-xmark close-modal" onclick="closeNsxModal()"></i>
+            </div>
+            
+            <form id="nsxForm" onsubmit="saveNsx(event)">
+                <input type="hidden" id="n_id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Mã NSX <span style="color:red">*</span></label>
+                        <input type="text" id="n_ma_nsx" required placeholder="VD: NIKE, ADIDAS...">
+                    </div>
+                    <div class="form-group">
+                        <label>Tên Nhà Sản Xuất <span style="color:red">*</span></label>
+                        <input type="text" id="n_ten_nsx" required placeholder="Nhập tên thương hiệu">
+                    </div>
+                    <div class="form-group full">
+                        <label>Quốc Gia</label>
+                        <input type="text" id="n_quoc_gia" placeholder="VD: Việt Nam, Mỹ, Nhật Bản...">
+                    </div>
+                    <div class="form-group full">
+                        <label>Email liên hệ <span style="color:red">*</span></label>
+                        <input type="email" id="n_lien_he" required placeholder="Nhập Email để nhận thông báo nhập hàng...">
+                    </div>
+                </div>
+                <button type="submit" class="btn-add" style="width: 100%; margin-top: 15px; padding: 15px; justify-content: center;"><i class="fa-solid fa-floppy-disk"></i> LƯU THÔNG TIN ĐỐI TÁC</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="productsModal">
+        <div class="modal-content" style="width: 850px;">
+            <div class="modal-header">
+                <h3 id="prodModalTitle">Sản phẩm thuộc NSX</h3>
+                <i class="fa-solid fa-xmark close-modal" onclick="closeProductsModal()"></i>
+            </div>
+            <div style="max-height: 450px; overflow-y: auto;">
+                <table style="margin: 0;">
+                    <thead>
+                        <tr>
+                            <th>Ảnh</th>
+                            <th>Mã SP / Tên SP</th>
+                            <th>Giá Bán</th>
+                            <th style="text-align: center;">Tồn Kho</th>
+                            <th style="text-align: center;">Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Sidebar Toggle
+        function toggleSidebar() {
+            document.body.classList.toggle('menu-collapsed');
+            localStorage.setItem('admin_sidebar_collapsed', document.body.classList.contains('menu-collapsed'));
+        }
+        if (localStorage.getItem('admin_sidebar_collapsed') === 'true') {
+            document.body.classList.add('menu-collapsed');
+        }
+
+        // 2. Chức năng Copy Text & Xuất CSV
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => { alert("Đã copy: " + text); });
+        }
+
+        function exportToCSV() {
+            let table = document.getElementById("nsxTable");
+            let rows = table.querySelectorAll("tr");
+            let csvContent = "data:text/csv;charset=utf-8,";
+
+            rows.forEach(function(row) {
+                let cols = row.querySelectorAll("td, th");
+                let rowData = [];
+                cols.forEach(function(col, index) {
+                    if(index !== 5) { // Bỏ cột Thao tác cuối cùng
+                        let text = col.innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+                        rowData.push('"' + text + '"'); 
+                    }
+                });
+                csvContent += rowData.join(",") + "\r\n";
+            });
+
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Nha_San_Xuat_HMenswear.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        // 3. LOGIC THÊM/SỬA/XÓA NSX
+        function openNsxModal() {
+            document.getElementById('nsxForm').reset();
+            document.getElementById('n_id').value = '';
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-building" style="color:var(--gold)"></i> THÊM NHÀ SẢN XUẤT MỚI';
+            document.getElementById('nsxModal').classList.add('active');
+        }
+
+        function openEditModalById(id) {
+            fetch('/admin/api/manufacturer/' + id)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') openEditModal(data.data);
+                    else alert(data.message || 'Không tải được thông tin nhà sản xuất.');
+                })
+                .catch(() => alert('Không tải được thông tin nhà sản xuất.'));
+        }
+
+        function openEditModal(nsx) {
+            document.getElementById('n_id').value = nsx.id;
+            document.getElementById('n_ma_nsx').value = nsx.ma_nsx;
+            document.getElementById('n_ten_nsx').value = nsx.ten_nsx;
+            document.getElementById('n_quoc_gia').value = nsx.quoc_gia || '';
+            document.getElementById('n_lien_he').value = nsx.lien_he || '';
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color:var(--gold)"></i> CẬP NHẬT THÔNG TIN NSX';
+            document.getElementById('nsxModal').classList.add('active');
+        }
+
+        function closeNsxModal() { document.getElementById('nsxModal').classList.remove('active'); }
+
+        function saveNsx(e) {
+            e.preventDefault();
+            const data = {
+                id: document.getElementById('n_id').value,
+                ma_nsx: document.getElementById('n_ma_nsx').value,
+                ten_nsx: document.getElementById('n_ten_nsx').value,
+                quoc_gia: document.getElementById('n_quoc_gia').value,
+                lien_he: document.getElementById('n_lien_he').value
+            };
+
+            fetch('/admin/api/manufacturer/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === 'success') {
+                    location.reload();
+                } else {
+                    // Sẽ báo lỗi đỏ nếu trùng Mã NSX hoặc Email
+                    alert(res.message);
+                }
+            });
+        }
+
+        function deleteNsx(id) {
+            if(!confirm("Cảnh báo: Nếu bạn xóa Nhà sản xuất này, các sản phẩm thuộc NSX này có thể bị ảnh hưởng. Bạn có chắc chắn muốn xóa?")) return;
+            fetch('/admin/api/manufacturer/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: id})
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === 'success') location.reload();
+                else alert(res.message);
+            });
+        }
+
+        // 4. LOGIC XEM SẢN PHẨM CỦA NSX
+        function closeProductsModal() { document.getElementById('productsModal').classList.remove('active'); }
+
+        function viewProducts(nsx_id, ten_nsx) {
+            document.getElementById('prodModalTitle').innerHTML = `<i class="fa-solid fa-box-open" style="color:var(--gold)"></i> Sản phẩm của: <b>${ten_nsx}</b>`;
+            document.getElementById('productsTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 30px; color: #888;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>';
+            document.getElementById('productsModal').classList.add('active');
+
+            fetch(`/admin/api/manufacturer/${nsx_id}/products`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    if (data.data.length === 0) {
+                        document.getElementById('productsTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 30px; color: #888;">Không có sản phẩm nào.</td></tr>';
+                        return;
+                    }
+                    let html = '';
+                    data.data.forEach(p => {
+                        let stockColor = p.so_luong < 10 ? 'var(--danger)' : 'var(--success)';
+                        let statusHtml = p.trang_thai === 'Đang bán' 
+                            ? '<span style="background:#e8f5e9; color:var(--success); padding:4px 8px; border-radius:4px; font-size:10px; font-weight:bold;">Đang bán</span>'
+                            : '<span style="background:#fdf2f2; color:var(--danger); padding:4px 8px; border-radius:4px; font-size:10px; font-weight:bold;">Đã ẩn</span>';
+
+                        html += `
+                            <tr>
+                                <td><img src="${p.hinh_anh}" class="prod-mini-img"></td>
+                                <td><b style="color:var(--primary)">${p.ma_sp}</b><br><small style="font-weight:600;">${p.ten_sp}</small></td>
+                                <td style="font-weight:700; color:var(--gold)">${Number(p.gia_ban).toLocaleString('vi-VN')}đ</td>
+                                <td style="text-align:center; font-weight:bold; font-size: 14px; color: ${stockColor}">${p.so_luong}</td>
+                                <td style="text-align:center;">${statusHtml}</td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('productsTableBody').innerHTML = html;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

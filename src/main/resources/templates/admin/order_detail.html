@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Đơn Hàng #[[${order.ma_hd}]] | Quản trị H-Menswear</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #111; --gold: #C5A059; --bg: #f4f7f6; --white: #fff;
+            --sidebar-w: 260px; --sidebar-c: 80px; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --success: #27ae60; --danger: #e74c3c; --info: #3498db; --warning: #f39c12; --border: #eee;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg); display: flex; min-height: 100vh; overflow-x: hidden; color: var(--primary); }
+
+        .sidebar { width: var(--sidebar-w); background: var(--primary); color: white; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; transition: var(--transition); z-index: 1000; overflow-y: auto;}
+        .sidebar::-webkit-scrollbar { display: none; }
+        body.menu-collapsed .sidebar { width: var(--sidebar-c); }
+        
+        .sidebar-header { min-height: 75px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .brand { font-weight: 700; color: var(--gold); white-space: nowrap; transition: 0.2s; font-size: 18px; letter-spacing: 1px;}
+        body.menu-collapsed .brand { display: none; }
+
+        .user-box { padding: 15px; margin: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        body.menu-collapsed .user-box { justify-content: center; padding: 10px; }
+        .avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--gold), #e6c17a); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 18px; }
+        .u-info p:first-child { font-weight: 700; font-size: 14px; color: #fff; margin-bottom: 4px;}
+        .u-info p:last-child { font-size: 10px; color: var(--gold); text-transform: uppercase; font-weight: 600;}
+        body.menu-collapsed .u-info { display: none; }
+
+        .nav-list { list-style: none; flex: 1; padding: 10px 0; }
+        .nav-item { display: flex; align-items: center; padding: 15px 28px; color: #a0a0a0; text-decoration: none; font-weight: 500;}
+        body.menu-collapsed .nav-item { justify-content: center; padding: 15px 0; }
+        .nav-item i { font-size: 18px; width: 25px; text-align: center; flex-shrink: 0; }
+        .nav-item span { margin-left: 15px; white-space: nowrap; }
+        body.menu-collapsed .nav-item span { display: none; }
+        .nav-item:hover, .nav-item.active { color: white; background: rgba(255,255,255,0.05); border-left: 4px solid var(--gold); }
+        .nav-item:hover i, .nav-item.active i { color: var(--gold); }
+
+        .main-content { margin-left: var(--sidebar-w); width: calc(100% - var(--sidebar-w)); transition: var(--transition); padding: 40px; }
+        body.menu-collapsed .main-content { margin-left: var(--sidebar-c); width: calc(100% - var(--sidebar-c)); }
+
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+        .btn-back { display: flex; align-items: center; gap: 8px; color: #666; text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.3s;}
+        .btn-back:hover { color: var(--primary); }
+        .btn-print { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; display: flex; gap: 8px; align-items: center;}
+        
+        /* CĂN CHỈNH LẠI GRID CHO CHUẨN */
+        .order-grid { display: grid; grid-template-columns: 1fr 380px; gap: 25px; align-items: start; }
+        .card { background: var(--white); border-radius: 12px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid rgba(0,0,0,0.02); }
+        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+
+        .order-table { width: 100%; border-collapse: collapse; }
+        .order-table th { text-align: left; padding-bottom: 15px; color: #888; font-size: 11px; text-transform: uppercase; }
+        .order-table td { padding: 20px 0; border-bottom: 1px solid #f9f9f9; vertical-align: middle; }
+        .prod-info { display: flex; align-items: center; gap: 20px; }
+        .prod-img { width: 70px; height: 90px; object-fit: cover; border-radius: 6px; background: #f0f0f0; border: 1px solid #eee; }
+        .prod-name { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+        .prod-meta { font-size: 12px; color: #777; }
+
+        .info-group { margin-bottom: 20px; }
+        .info-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; margin-bottom: 5px; }
+        .info-value { font-size: 14px; font-weight: 600; line-height: 1.5; display: flex; align-items: center; gap: 10px;}
+        .copy-btn { background: #f0f0f0; border: none; padding: 4px 8px; border-radius: 4px; color: #555; cursor: pointer; font-size: 11px; transition: 0.2s; }
+
+        .price-summary { background: #FAFAFA; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--border);}
+        .price-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: #555;}
+        .price-total { border-top: 1px dashed #ddd; padding-top: 15px; margin-top: 10px; font-weight: 700; font-size: 18px; color: var(--gold); display: flex; justify-content: space-between;}
+
+        .checklist { display: flex; flex-direction: column; gap: 15px; }
+        .check-item { display: flex; align-items: flex-start; gap: 15px; padding: 18px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .check-item.completed { background: #F0F9F4; border-color: #C3E6CB; }
+        .check-item.active { border-color: var(--gold); background: #FFFDF5; }
+        .check-item.disabled { opacity: 0.5; cursor: not-allowed; }
+        .check-box { width: 24px; height: 24px; border: 2px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; flex-shrink: 0; margin-top: 2px; font-size: 12px;}
+        .completed .check-box { background: var(--success); border-color: var(--success); color: white; }
+        .active .check-box { border-color: var(--gold); color: var(--gold); }
+
+        .cancel-section { background: #FFF5F5; border: 1px dashed #FACDCD; border-radius: 10px; padding: 25px; text-align: center; margin-top: 15px;}
+        .cancel-title { color: var(--danger); font-weight: 700; margin-bottom: 10px; text-transform: uppercase; font-size: 14px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; text-transform: uppercase; transition: 0.3s; flex: 1; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: #666; color: white; }
+        .btn-outline-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); width: 100%; margin-top: 15px; }
+        
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .st-pending { background: #FFF3CD; color: #856404; }
+        .st-success { background: #D4EDDA; color: #155724; }
+
+        @media print {
+            .sidebar, .top-bar, .btn, .btn-group, .btn-outline-danger, .copy-btn { display: none !important; }
+            .main-content { margin: 0 !important; width: 100% !important; padding: 0 !important; }
+            .order-grid { grid-template-columns: 1fr; gap: 0; }
+            .card { box-shadow: none; border: none; padding: 10px; margin-bottom: 10px; }
+            body { background: white; color: black; }
+        }
+    
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text" th:attr="data-order-id=${order.id}">
+
+    <aside class="sidebar" id="sidebar">
+      
+        <div class="user-box" onclick="toggleSidebar()">
+            <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="u-info">
+                <p>[[${currentUserName}]]</p>
+                <p>[[${currentUserRole}]]</p>
+            </div>
+        </div>
+        <nav class="nav-list">
+            <a href="/admin/dashboard" class="nav-item"><i class="fa-solid fa-house"></i> <span>Tổng Quan</span></a>
+            
+            <th:block th:if="${currentUserRole == 'Quản lý'}">
+            <a href="/admin/reports" class="nav-item"><i class="fa-solid fa-chart-pie"></i> <span>Vận Hành</span></a>
+            <a href="/admin/revenue" class="nav-item"><i class="fa-solid fa-hand-holding-dollar"></i> <span>Doanh Thu</span></a>
+
+        <a href="/admin/audit-logs" class="nav-item"><i class="fa-solid fa-file-lines"></i> <span>Nhật Ký</span></a>
+
+         <a href="/admin/vouchers" class="nav-item"><i class="fa-solid fa-ticket"></i> <span>Khuyến Mãi</span></a>
+                             <a href="/admin/employees" class="nav-item"><i class="fa-solid fa-user-shield"></i> <span>Nhân Viên</span></a>
+         
+         
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV xác nhận đơn')}">
+                 <a href="/admin/customers" class="nav-item"><i class="fa-solid fa-users"></i> <span>Khách Hàng</span></a>
+            <a href="/admin/orders" class="nav-item active"><i class="fa-solid fa-cart-flatbed"></i> <span>Đơn Hàng</span></a>
+       
+            </th:block>
+
+            <th:block th:if="${(currentUserRole == 'Quản lý' or currentUserRole == 'NV Kho')}">
+            <a href="/admin/products" class="nav-item"><i class="fa-solid fa-box"></i> <span>Sản Phẩm</span></a>
+            <a href="/admin/manufacturers" class="nav-item"><i class="fa-solid fa-industry"></i> <span>Nhà Sản Xuất</span></a>
+            </th:block>
+ 
+    </nav>
+        <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;">
+            <a href="/logout" class="nav-item" style="padding:0; color:var(--danger);"><i class="fa-solid fa-power-off"></i> <span>Đăng Xuất</span></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-bar">
+            <a href="/admin/orders" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại danh sách</a>
+            <div style="display:flex;gap:15px;align-items:center;">
+                <span class="status-badge" th:classappend="${order.trang_thai == 'Đã thanh toán' or order.trang_thai == 'Đã giao' or order.trang_thai == 'Hoàn thành' ? ' st-success' : ' st-pending'}" th:text="${order.trang_thai}"></span>
+                <button class="btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> In Hóa Đơn</button>
+            </div>
+        </div>
+
+        <div class="order-grid">
+            <div class="left-col">
+                <div th:if="${order.is_fraud_warning}" style="background:#FFF5F5;border:1px dashed #e74c3c;border-left:5px solid #e74c3c;padding:15px 20px;border-radius:8px;margin-bottom:25px;display:flex;align-items:center;gap:15px;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#e74c3c;font-size:28px;"></i>
+                    <div><h4 style="color:#e74c3c;margin-bottom:5px;font-size:14px;text-transform:uppercase;">⚠️ Rủi Ro Bùng Hàng Rất Cao</h4><p style="font-size:13px;color:#555;">Khách hàng này đã từng hủy <b th:text="${order.cancel_history_count}"></b> đơn hàng trong quá khứ.</p></div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title"><i class="fa-solid fa-bag-shopping"></i> Chi tiết đơn hàng #<span th:text="${order.ma_hd}"></span></h3>
+                    <table class="order-table"><thead><tr><th>Sản phẩm</th><th style="width:100px;">Đơn giá</th><th style="width:80px;text-align:center;">SL</th><th style="width:120px;text-align:right;">Thành tiền</th></tr></thead>
+                    <tbody><tr th:each="item : ${order.items}"><td><div class="prod-info"><img th:src="${item.hinh_anh}" class="prod-img"><div><div class="prod-name" th:text="${item.ten_sp}"></div><div class="prod-meta">Mã: <span th:text="${item.ma_sp}"></span> | Màu: <span th:text="${item.mau_sac}"></span> | Size: <span th:text="${item.size}"></span></div></div></div></td><td th:text="|${item.gia_ban_text}đ|"></td><td style="text-align:center;font-weight:600;" th:text="|x${item.so_luong}|"></td><td style="text-align:right;font-weight:700;" th:text="|${item.thanh_tien_text}đ|"></td></tr></tbody></table>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title"><i class="fa-solid fa-user"></i> Thông tin giao hàng</h3>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;">
+                        <div class="info-group"><div class="info-label">Người nhận</div><div class="info-value" th:text="${order.ten_kh}"></div></div>
+                        <div class="info-group"><div class="info-label">Số điện thoại</div><div class="info-value"><span th:text="${order.sdt}"></span><button class="copy-btn" th:attr="data-copy=${order.sdt}" onclick="copyText(this.dataset.copy)"><i class="fa-solid fa-copy"></i></button></div></div>
+                        <div class="info-group" style="grid-column:span 2;"><div class="info-label">Địa chỉ nhận hàng</div><div class="info-value" style="align-items:flex-start;"><span th:text="${order.dia_chi_kh}"></span><button class="copy-btn" th:attr="data-copy=${order.dia_chi_kh}" onclick="copyText(this.dataset.copy)"><i class="fa-solid fa-copy"></i></button></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-col">
+                <div class="card"><h3 class="card-title"><i class="fa-solid fa-credit-card"></i> Thanh toán</h3><div class="info-group"><div class="info-label">Phương thức</div><div class="info-value" th:text="${order.phuong_thuc_tt}"></div></div><div class="price-summary"><div class="price-row"><span>Tạm tính</span><span th:text="|${order.tong_tien_text}đ|"></span></div><div class="price-row"><span>Phí vận chuyển</span><span>0đ</span></div><div class="price-total"><span>TỔNG CỘNG</span><span th:text="|${order.tong_tien_text}đ|"></span></div></div></div>
+                <div class="card">
+                    <h3 class="card-title"><i class="fa-solid fa-list-check"></i> Xử lý đơn hàng</h3>
+                    <div class="cancel-section" th:if="${order.trang_thai == 'Yêu cầu hủy'}"><div class="cancel-title"><i class="fa-solid fa-triangle-exclamation"></i> Khách yêu cầu hủy đơn</div><div class="btn-group"><button class="btn btn-danger" onclick="updateStatus('Đã hủy')">Chấp nhận Hủy</button><button class="btn btn-secondary" onclick="updateStatus('Chờ thanh toán')">Từ chối yêu cầu</button></div></div>
+                    <div class="cancel-section" th:if="${order.trang_thai == 'Đã hủy'}" style="background:#F5F5F5;border-color:#DDD;"><div class="cancel-title" style="color:#999;"><i class="fa-solid fa-ban"></i> Đơn hàng đã bị hủy</div></div>
+                    <th:block th:if="${order.trang_thai != 'Yêu cầu hủy' and order.trang_thai != 'Đã hủy'}">
+                        <div class="checklist">
+                            <div class="check-item completed"><div class="check-box"><i class="fa-solid fa-check"></i></div><div><div class="info-value">Mới đặt hàng</div><div class="prod-meta">Hệ thống đã nhận đơn</div></div></div>
+                            <div class="check-item" th:classappend="${order.status_level >= 2 ? ' completed' : (order.status_level == 1 ? ' active' : ' disabled')}" onclick="stepUpdate(this,'Đang xử lý')" th:attr="data-enabled=${order.status_level == 1}"><div class="check-box"><i th:if="${order.status_level >= 2}" class="fa-solid fa-check"></i></div><div><div class="info-value">Xác nhận & Đóng gói</div></div></div>
+                            <div class="check-item" th:classappend="${order.status_level >= 3 ? ' completed' : (order.status_level == 2 ? ' active' : ' disabled')}" onclick="stepUpdate(this,'Đang giao')" th:attr="data-enabled=${order.status_level == 2}"><div class="check-box"><i th:if="${order.status_level >= 3}" class="fa-solid fa-check"></i></div><div><div class="info-value">Giao cho vận chuyển</div></div></div>
+                            <div class="check-item" th:classappend="${order.status_level >= 4 ? ' completed' : (order.status_level == 3 ? ' active' : ' disabled')}" onclick="stepUpdate(this,'Đã thanh toán')" th:attr="data-enabled=${order.status_level == 3}"><div class="check-box"><i th:if="${order.status_level >= 4}" class="fa-solid fa-check"></i></div><div><div class="info-value">Giao hàng thành công</div></div></div>
+                        </div>
+                        <button th:if="${order.status_level < 4}" class="btn btn-outline-danger" onclick="updateStatus('Đã hủy')"><i class="fa-solid fa-xmark"></i> Hủy đơn hàng này</button>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.body.classList.toggle('menu-collapsed');
+            localStorage.setItem('admin_sidebar_collapsed', document.body.classList.contains('menu-collapsed'));
+        }
+        function copyText(text) { navigator.clipboard.writeText(text).then(() => alert("Đã copy: " + text)); }
+        function stepUpdate(el, status) { if (el.dataset.enabled === 'true') updateStatus(status); }
+        function updateStatus(newStatus) {
+            if(!confirm(`Xác nhận chuyển trạng thái sang: "${newStatus}"?`)) return;
+            fetch('/admin/api/order/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order_id: document.body.dataset.orderId, status: newStatus })
+            }).then(res => res.json()).then(data => location.reload());
+        }
+    </script>
+</body>
+</html>

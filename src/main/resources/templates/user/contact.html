@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Liên Hệ & Phản Hồi | H-Menswear</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #C5A059; --black: #111111; --white: #FFFFFF; --smoke: #F9F9F9; --border: #EAEAEA; --gray: #777777;}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--smoke); color: var(--black); }
+        a { text-decoration: none; color: inherit; }
+        header { background: var(--white); padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .logo { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: bold; letter-spacing: 2px;}
+        
+        .contact-container { max-width: 800px; margin: 60px auto; background: white; padding: 50px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .title { font-family: 'Playfair Display', serif; font-size: 32px; text-align: center; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: var(--gray); font-size: 14px; margin-bottom: 40px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; color: #555; }
+        .form-group input, .form-group textarea { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 4px; font-family: 'Montserrat'; font-size: 14px; outline: none; transition: 0.3s; }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--gold); }
+        
+        .btn-submit { width: 100%; background: var(--black); color: white; padding: 18px; border: none; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.3s; margin-top: 10px; border-radius: 4px;}
+        .btn-submit:hover { background: var(--gold); }
+
+        .alert-success { background: #e8f5e9; color: #27ae60; padding: 15px; border-radius: 4px; margin-bottom: 25px; text-align: center; font-weight: 600; border: 1px solid #c8e6c9;}
+    
+        /* Giữ giao diện gốc nhưng chuẩn hoá các nút/anchor-button sau khi chuyển sang Thymeleaf. */
+        a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { text-decoration: none !important; }
+        button:not(:disabled), a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { cursor: pointer; }
+        button, a[class^="btn"], a[class*=" btn"], a[class*="btn-"] { transition: filter .2s ease, opacity .2s ease, transform .15s ease; }
+        button:not(:disabled):hover, a[class^="btn"]:hover, a[class*=" btn"]:hover, a[class*="btn-"]:hover { filter: brightness(.96); }
+</style>
+</head>
+<body th:inline="text">
+    <header>
+        <div class="logo"><a href="/home">H-MENSWEAR</a></div>
+        <a href="/products" style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;"><i class="fa-solid fa-arrow-left"></i> Quay lại Cửa hàng</a>
+    </header>
+
+    <main class="contact-container">
+        <h1 class="title">Liên Hệ & Phản Hồi</h1>
+        <p class="subtitle">Mọi ý kiến đóng góp của bạn là cơ sở để chúng tôi cải thiện chất lượng dịch vụ.</p>
+
+        <div th:if="${successMessage != null}" class="alert-success"><i class="fa-solid fa-circle-check"></i> [[${successMessage}]]</div>
+        <div th:if="${errorMessage != null}" style="background:#fff1ef;color:#c0392b;padding:15px;border-radius:4px;margin-bottom:25px;text-align:center;font-weight:600;border:1px solid #f3c5be;">[[${errorMessage}]]</div>
+
+        <form method="POST" th:action="@{/contact}" action="/contact">
+            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="form-group">
+                <label>Họ và Tên</label>
+                <input type="text" name="ten_kh" required placeholder="Nhập họ tên của bạn" th:value="${customer != null ? customer.ten_kh : ''}">
+            </div>
+            <div class="form-group">
+                <label>Email liên hệ</label>
+                <input type="email" name="email" required placeholder="example@email.com" th:value="${customer != null ? customer.email : ''}">
+            </div>
+            <div class="form-group">
+                <label>Chủ đề phản hồi</label>
+                <input type="text" name="chu_de" required placeholder="Vấn đề bạn đang gặp phải?">
+            </div>
+            <div class="form-group">
+                <label>Nội dung chi tiết</label>
+                <textarea name="noi_dung" rows="5" required placeholder="Mô tả chi tiết nội dung..."></textarea>
+            </div>
+            <button type="submit" class="btn-submit">GỬI PHẢN HỒI YÊU CẦU</button>
+        </form>
+    </main>
+</body>
+</html>
